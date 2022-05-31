@@ -81,6 +81,9 @@ def _check_args(parsed_args, **kwargs):
 
 
 def _fix_args(params, **kwargs):
+    if 'NetworkInterfaces' not in params:
+        return
+    interface = params['NetworkInterfaces'][0]
     # The RunInstances request provides some parameters
     # such as --subnet-id and --security-group-id that can be specified
     # as separate options only if the request DOES NOT include a
@@ -97,26 +100,24 @@ def _fix_args(params, **kwargs):
         'SecondaryPrivateIpAddressCount',
         'AssociatePublicIpAddress'
     ]
-    if 'NetworkInterfaces' in params:
-        interface = params['NetworkInterfaces'][0]
-        if any(param in interface for param in network_interface_params):
-            if 'SubnetId' in params:
-                interface['SubnetId'] = params['SubnetId']
-                del params['SubnetId']
-            if 'SecurityGroupIds' in params:
-                interface['Groups'] = params['SecurityGroupIds']
-                del params['SecurityGroupIds']
-            if 'PrivateIpAddress' in params:
-                ip_addr = {'PrivateIpAddress': params['PrivateIpAddress'],
-                           'Primary': True}
-                interface['PrivateIpAddresses'] = [ip_addr]
-                del params['PrivateIpAddress']
-            if 'Ipv6AddressCount' in params:
-                interface['Ipv6AddressCount'] = params['Ipv6AddressCount']
-                del params['Ipv6AddressCount']
-            if 'Ipv6Addresses' in params:
-                interface['Ipv6Addresses'] = params['Ipv6Addresses']
-                del params['Ipv6Addresses']
+    if any(param in interface for param in network_interface_params):
+        if 'SubnetId' in params:
+            interface['SubnetId'] = params['SubnetId']
+            del params['SubnetId']
+        if 'SecurityGroupIds' in params:
+            interface['Groups'] = params['SecurityGroupIds']
+            del params['SecurityGroupIds']
+        if 'PrivateIpAddress' in params:
+            ip_addr = {'PrivateIpAddress': params['PrivateIpAddress'],
+                       'Primary': True}
+            interface['PrivateIpAddresses'] = [ip_addr]
+            del params['PrivateIpAddress']
+        if 'Ipv6AddressCount' in params:
+            interface['Ipv6AddressCount'] = params['Ipv6AddressCount']
+            del params['Ipv6AddressCount']
+        if 'Ipv6Addresses' in params:
+            interface['Ipv6Addresses'] = params['Ipv6Addresses']
+            del params['Ipv6Addresses']
 
 
 EVENTS = [

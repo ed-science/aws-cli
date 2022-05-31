@@ -33,9 +33,7 @@ def add_waiters(command_table, session, command_object, **kwargs):
                                                            service_model)
         if waiter_model is None:
             return
-        waiter_names = waiter_model.waiter_names
-        # If there are waiters make a wait command.
-        if waiter_names:
+        if waiter_names := waiter_model.waiter_names:
             command_table['wait'] = WaitCommand(
                 session, waiter_model, service_model)
 
@@ -173,25 +171,21 @@ class WaiterStateDocBuilder(object):
         # If success is based off of the state of a resource include the
         # description about what resource is looked at.
         if matcher in ['path', 'pathAny', 'pathAll']:
-            resource_description = u'JMESPath query %s returns ' % \
-                acceptor.argument
+            resource_description = f'JMESPath query {acceptor.argument} returns '
             # Prepend the resource description to the template description
             success_description = resource_description + success_description
-        # Complete the description by filling in the expected success state.
-        full_success_description = success_description % acceptor.expected
-        return full_success_description
+        return success_description % acceptor.expected
 
     def _build_operation_description(self, operation):
         operation_name = xform_name(operation).replace('_', '-')
-        return u'when polling with ``%s``.' % operation_name
+        return f'when polling with ``{operation_name}``.'
 
     def _build_polling_description(self, delay, max_attempts):
-        description = (
+        return (
             ' It will poll every %s seconds until a successful state '
             'has been reached. This will exit with a return code of 255 '
-            'after %s failed checks.'
-            % (delay, max_attempts))
-        return description
+            'after %s failed checks.' % (delay, max_attempts)
+        )
 
 
 class WaiterCaller(object):

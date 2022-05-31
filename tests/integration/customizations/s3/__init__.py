@@ -34,8 +34,7 @@ def make_s3_files(session, key1='text1.txt', key2='text2.txt', size=None):
     client.put_object(Bucket=bucket, Key=key1, Body=string1)
     if key2 is not None:
         client.put_object(Bucket=bucket, Key='another_directory/')
-        client.put_object(Bucket=bucket, Key='another_directory/%s' % key2,
-                          Body=string2)
+        client.put_object(Bucket=bucket, Key=f'another_directory/{key2}', Body=string2)
     return bucket
 
 

@@ -24,10 +24,10 @@ from awscli.compat import get_popen_kwargs_for_pager_cmd
 
 
 def split_on_commas(value):
-    if not any(char in value for char in ['"', '\\', "'", ']', '[']):
+    if all(char not in value for char in ['"', '\\', "'", ']', '[']):
         # No quotes or escaping, just use a simple split.
         return value.split(',')
-    elif not any(char in value for char in ['"', "'", '[', ']']):
+    elif all(char not in value for char in ['"', "'", '[', ']']):
         # Simple escaping, let the csv module handle it.
         return list(csv.reader(six.StringIO(value), escapechar='\\'))[0]
     else:
@@ -40,7 +40,7 @@ def _split_with_quotes(value):
     try:
         parts = list(csv.reader(six.StringIO(value), escapechar='\\'))[0]
     except csv.Error:
-        raise ValueError("Bad csv value: %s" % value)
+        raise ValueError(f"Bad csv value: {value}")
     iter_parts = iter(parts)
     new_parts = []
     for part in iter_parts:
@@ -53,11 +53,7 @@ def _split_with_quotes(value):
         if list_start >= 0 and value.find(']') != -1 and \
            (quote_char is None or part.find(quote_char) > list_start):
             # This is a list, eat all the items until the end
-            if ']' in part:
-                # Short circuit for only one item
-                new_chunk = part
-            else:
-                new_chunk = _eat_items(value, iter_parts, part, ']')
+            new_chunk = part if ']' in part else _eat_items(value, iter_parts, part, ']')
             list_items = _split_with_quotes(new_chunk[list_start + 2:-1])
             new_chunk = new_chunk[:list_start + 1] + ','.join(list_items)
             new_parts.append(new_chunk)
@@ -103,12 +99,7 @@ def _find_quote_char_in_part(part):
     given string. None is returned if the given string doesn't have a single or
     double quote character.
     """
-    quote_char = None
-    for ch in part:
-        if ch in ('"', "'"):
-            quote_char = ch
-            break
-    return quote_char
+    return next((ch for ch in part if ch in ('"', "'")), None)
 
 
 def find_service_and_method_in_event_name(event_name):
@@ -118,13 +109,8 @@ def find_service_and_method_in_event_name(event_name):
     event.service.operation.
     """
     split_event = event_name.split('.')[1:]
-    service_name = None
-    if len(split_event) > 0:
-        service_name = split_event[0]
-
-    operation_name = None
-    if len(split_event) > 1:
-        operation_name = split_event[1]
+    service_name = split_event[0] if len(split_event) > 0 else None
+    operation_name = split_event[1] if len(split_event) > 1 else None
     return service_name, operation_name
 
 
@@ -147,10 +133,10 @@ def is_document_type_container(shape):
     end_shape = recording_visitor.visited.pop()
     if not is_document_type(end_shape):
         return False
-    for shape in recording_visitor.visited:
-        if shape.type_name not in ['list', 'map']:
-            return False
-    return True
+    return all(
+        shape.type_name in ['list', 'map']
+        for shape in recording_visitor.visited
+    )
 
 
 def operation_uses_document_types(operation_model):
@@ -159,18 +145,15 @@ def operation_uses_document_types(operation_model):
     walker = ShapeWalker()
     walker.walk(operation_model.input_shape, recording_visitor)
     walker.walk(operation_model.output_shape, recording_visitor)
-    for visited_shape in recording_visitor.visited:
-        if is_document_type(visited_shape):
-            return True
-    return False
+    return any(
+        is_document_type(visited_shape)
+        for visited_shape in recording_visitor.visited
+    )
 
 
 def json_encoder(obj):
     """JSON encoder that formats datetimes as ISO8601 format."""
-    if isinstance(obj, datetime.datetime):
-        return obj.isoformat()
-    else:
-        return obj
+    return obj.isoformat() if isinstance(obj, datetime.datetime) else obj
 
 
 @contextlib.contextmanager
@@ -249,9 +232,10 @@ class ShapeWalker(object):
         if shape.name in stack:
             return
         stack.append(shape.name)
-        getattr(self, '_walk_%s' % shape.type_name, self._default_scalar_walk)(
+        getattr(self, f'_walk_{shape.type_name}', self._default_scalar_walk)(
             shape, visitor, stack
         )
+
         stack.pop()
 
     def _walk_structure(self, shape, visitor, stack):

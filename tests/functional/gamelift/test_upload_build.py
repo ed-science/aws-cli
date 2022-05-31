@@ -30,7 +30,7 @@ class TestUploadBuild(BaseAWSCommandParamsTest):
         self.files.create_file('tmpfile', 'Some contents')
         cmdline = self.prefix
         cmdline += ' --name mybuild --build-version myversion'
-        cmdline += ' --build-root %s' % self.files.rootdir
+        cmdline += f' --build-root {self.files.rootdir}'
 
         self.parsed_responses = [
             {'Build': {'BuildId': 'myid'}},
@@ -69,15 +69,16 @@ class TestUploadBuild(BaseAWSCommandParamsTest):
 
         # Check the output of the command.
         self.assertIn(
-            'Successfully uploaded %s to AWS GameLift' % self.files.rootdir,
-            stdout)
+            f'Successfully uploaded {self.files.rootdir} to AWS GameLift', stdout
+        )
+
         self.assertIn('Build ID: myid', stdout)
 
     def test_upload_build_with_operating_system_param(self):
         self.files.create_file('tmpfile', 'Some contents')
         cmdline = self.prefix
         cmdline += ' --name mybuild --build-version myversion'
-        cmdline += ' --build-root %s' % self.files.rootdir
+        cmdline += f' --build-root {self.files.rootdir}'
         cmdline += ' --operating-system WINDOWS_2012'
 
         self.parsed_responses = [
@@ -118,14 +119,15 @@ class TestUploadBuild(BaseAWSCommandParamsTest):
 
         # Check the output of the command.
         self.assertIn(
-            'Successfully uploaded %s to AWS GameLift' % self.files.rootdir,
-            stdout)
+            f'Successfully uploaded {self.files.rootdir} to AWS GameLift', stdout
+        )
+
         self.assertIn('Build ID: myid', stdout)
 
     def test_upload_build_with_empty_directory(self):
         cmdline = self.prefix
         cmdline += ' --name mybuild --build-version myversion'
-        cmdline += ' --build-root %s' % self.files.rootdir
+        cmdline += f' --build-root {self.files.rootdir}'
 
         self.parsed_responses = [
             {'Build': {'BuildId': 'myid'}},
@@ -152,7 +154,7 @@ class TestUploadBuild(BaseAWSCommandParamsTest):
 
         cmdline = self.prefix
         cmdline += ' --name mybuild --build-version myversion'
-        cmdline += ' --build-root %s' % dir_not_exist
+        cmdline += f' --build-root {dir_not_exist}'
 
         self.parsed_responses = [
             {'Build': {'BuildId': 'myid'}},

@@ -21,7 +21,7 @@ def resolve_given_outfile_path(path):
         return
     outfile = os.path.expanduser(os.path.expandvars(path))
     if not os.access(os.path.dirname(os.path.abspath(outfile)), os.W_OK):
-        raise ValueError('Unable to write to file: %s' % outfile)
+        raise ValueError(f'Unable to write to file: {outfile}')
     return outfile
 
 
@@ -62,7 +62,7 @@ class OverrideRequiredArgsArgument(CustomArgument):
                                self.override_required_args)
 
     def override_required_args(self, argument_table, args, **kwargs):
-        name_in_cmdline = '--' + self.name
+        name_in_cmdline = f'--{self.name}'
         # Set all ``Argument`` objects in ``argument_table`` to not required
         # if this argument's name is present in the command line.
         if name_in_cmdline in args:

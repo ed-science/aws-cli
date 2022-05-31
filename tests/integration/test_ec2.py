@@ -18,12 +18,12 @@ class TestDescribeInstances(unittest.TestCase):
         self.prefix = 'ec2 describe-instances --region us-west-2'
 
     def test_describe_instances_with_id(self):
-        command = self.prefix + ' --instance-ids malformed-id'
+        command = f'{self.prefix} --instance-ids malformed-id'
         result = aws(command)
         self.assertIn('InvalidInstanceID.Malformed', result.stderr)
 
     def test_describe_instances_with_filter(self):
-        command = self.prefix + ' --filters Name=instance-id,Values='
+        command = f'{self.prefix} --filters Name=instance-id,Values='
         command += 'malformed-id'
         result = aws(command)
         reservations = result.json["Reservations"]
@@ -35,7 +35,7 @@ class TestDescribeSnapshots(unittest.TestCase):
         self.prefix = 'ec2 describe-snapshots --region us-west-2'
 
     def test_describe_snapshot_with_snapshot_id(self):
-        command = self.prefix + ' --snapshot-ids malformed-id'
+        command = f'{self.prefix} --snapshot-ids malformed-id'
         result = aws(command)
         self.assertIn('InvalidParameterValue', result.stderr)
 
@@ -52,7 +52,7 @@ class TestDescribeVolumes(unittest.TestCase):
         self.prefix = 'ec2 describe-volumes --region us-west-2'
 
     def test_describe_volumes_with_volume_id(self):
-        command = self.prefix + ' --volume-ids malformed-id'
+        command = f'{self.prefix} --volume-ids malformed-id'
         result = aws(command)
         self.assertIn('InvalidParameterValue', result.stderr)
 

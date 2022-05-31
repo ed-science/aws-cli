@@ -18,7 +18,7 @@ class TestRebuildWorkspaces(BaseAWSCommandParamsTest):
     prefix = 'workspaces rebuild-workspaces'
 
     def test_shorthand(self):
-        command = self.prefix + ' --rebuild-workspace-requests id1 id2 id3'
+        command = f'{self.prefix} --rebuild-workspace-requests id1 id2 id3'
         expected_params = {
             'RebuildWorkspaceRequests': [
                 {"WorkspaceId": "id1"},

@@ -56,7 +56,7 @@ class CountArgument(BaseCLIArgument):
 
     @property
     def cli_name(self):
-        return '--' + self._name
+        return f'--{self._name}'
 
     @property
     def cli_type_name(self):
@@ -84,10 +84,7 @@ class CountArgument(BaseCLIArgument):
             # NO-OP if value is not explicitly set by user
             return
         try:
-            if ':' in value:
-                minstr, maxstr = value.split(':')
-            else:
-                minstr, maxstr = (value, value)
+            minstr, maxstr = value.split(':') if ':' in value else (value, value)
             parameters['MinCount'] = int(minstr)
             parameters['MaxCount'] = int(maxstr)
         except:

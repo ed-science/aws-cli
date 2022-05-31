@@ -35,21 +35,21 @@ class TestDescribeVolumes(BaseAWSCommandParamsTest):
         self.assert_params_for_cmd(command, params)
 
     def test_max_results_not_set_with_volume_ids(self):
-        command = self.prefix + ' --volume-ids id-volume'
+        command = f'{self.prefix} --volume-ids id-volume'
         params = {'VolumeIds': ['id-volume']}
         self.assert_params_for_cmd(command, params)
 
     def test_max_results_not_set_with_filter(self):
-        command = self.prefix + ' --filters Name=volume-id,Values=id-volume'
+        command = f'{self.prefix} --filters Name=volume-id,Values=id-volume'
         params = {'Filters': [{'Name': 'volume-id', 'Values': ['id-volume']}]}
         self.assert_params_for_cmd(command, params)
 
     def test_max_results_not_overwritten(self):
-        command = self.prefix + ' --max-results 5'
+        command = f'{self.prefix} --max-results 5'
         params = {'MaxResults': 5}
         self.assert_params_for_cmd(command, params)
 
-        command = self.prefix + ' --page-size 5'
+        command = f'{self.prefix} --page-size 5'
         self.assert_params_for_cmd(command, params)
 
     def test_max_results_with_cli_input_json(self):
@@ -57,5 +57,5 @@ class TestDescribeVolumes(BaseAWSCommandParamsTest):
         file_path = self.file_creator.create_file(
             'params.json', json.dumps(params))
 
-        command = self.prefix + ' --cli-input-json file://%s' % file_path
+        command = self.prefix + f' --cli-input-json file://{file_path}'
         self.assert_params_for_cmd(command, params)

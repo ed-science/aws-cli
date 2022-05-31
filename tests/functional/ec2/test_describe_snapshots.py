@@ -23,21 +23,21 @@ class TestDescribeSnapshots(BaseAWSCommandParamsTest):
         self.assert_params_for_cmd(command, params)
 
     def test_max_results_not_set_with_snapshot_ids(self):
-        command = self.prefix + ' --snapshot-ids snap-example'
+        command = f'{self.prefix} --snapshot-ids snap-example'
         params = {'SnapshotIds': ['snap-example']}
         self.assert_params_for_cmd(command, params)
 
     def test_max_results_not_set_with_filter(self):
-        command = self.prefix + ' --filters Name=snapshot-id,Values=snap-snap'
+        command = f'{self.prefix} --filters Name=snapshot-id,Values=snap-snap'
         params = {'Filters': [{
             'Name': 'snapshot-id', 'Values': ['snap-snap']
         }]}
         self.assert_params_for_cmd(command, params)
 
     def test_max_results_not_overwritten(self):
-        command = self.prefix + ' --max-results 5'
+        command = f'{self.prefix} --max-results 5'
         params = {'MaxResults': 5}
         self.assert_params_for_cmd(command, params)
 
-        command = self.prefix + ' --page-size 5'
+        command = f'{self.prefix} --page-size 5'
         self.assert_params_for_cmd(command, params)

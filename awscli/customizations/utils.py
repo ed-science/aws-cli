@@ -116,8 +116,8 @@ def validate_mutually_exclusive_handler(*groups):
 def validate_mutually_exclusive(parsed_args, *groups):
     """Validate mutually exclusive groups in the parsed args."""
     args_dict = vars(parsed_args)
-    all_args = set(arg for group in groups for arg in group)
-    if not any(k in all_args for k in args_dict if args_dict[k] is not None):
+    all_args = {arg for group in groups for arg in group}
+    if all(k not in all_args for k in args_dict if args_dict[k] is not None):
         # If none of the specified args are in a mutually exclusive group
         # there is nothing left to validate.
         return
@@ -129,7 +129,7 @@ def validate_mutually_exclusive(parsed_args, *groups):
             continue
         if current_group is None:
             current_group = key_group
-        elif not key_group == current_group:
+        elif key_group != current_group:
             raise ValueError('The key "%s" cannot be specified when one '
                              'of the following keys are also specified: '
                              '%s' % (key, ', '.join(current_group)))
@@ -171,7 +171,7 @@ def create_client_from_parsed_globals(session, service_name, parsed_globals,
     if 'verify_ssl' in parsed_globals:
         client_args['verify'] = parsed_globals.verify_ssl
     if overrides:
-        client_args.update(overrides)
+        client_args |= overrides
     return session.create_client(service_name, **client_args)
 
 

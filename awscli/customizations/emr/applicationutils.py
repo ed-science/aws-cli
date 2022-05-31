@@ -60,8 +60,13 @@ def build_applications(region,
                     _build_hbase_install_step(
                         constants.HBASE_PATH_HADOOP1_INSTALL_JAR))
             else:
-                raise ValueError('aws: error: AMI version ' + ami_version +
-                                 'is not compatible with HBase.')
+                raise ValueError(
+                    (
+                        f'aws: error: AMI version {ami_version}'
+                        + 'is not compatible with HBase.'
+                    )
+                )
+
         elif app_name == constants.IMPALA:
             ba_list.append(
                 _build_impala_install_bootstrap_action(
@@ -78,8 +83,7 @@ def build_applications(region,
 def _build_supported_product(name, args):
     if args is None:
         args = []
-    config = {'Name': name.lower(), 'Args': args}
-    return config
+    return {'Name': name.lower(), 'Args': args}
 
 
 def _build_ganglia_install_bootstrap_action(region):
@@ -132,12 +136,12 @@ def _build_install_hive_step(region,
         emrutils.build_s3_link(constants.HIVE_BASE_PATH, region),
         constants.HIVE_VERSIONS,
         constants.LATEST]
-    step = emrutils.build_step(
+    return emrutils.build_step(
         name=constants.INSTALL_HIVE_NAME,
         action_on_failure=action_on_failure,
         jar=emrutils.build_s3_link(constants.SCRIPT_RUNNER_PATH, region),
-        args=step_args)
-    return step
+        args=step_args,
+    )
 
 
 def _build_install_hive_site_step(region, hive_site_path,
@@ -150,12 +154,12 @@ def _build_install_hive_site_step(region, hive_site_path,
         hive_site_path,
         constants.HIVE_VERSIONS,
         constants.LATEST]
-    step = emrutils.build_step(
+    return emrutils.build_step(
         name=constants.INSTALL_HIVE_SITE_NAME,
         action_on_failure=action_on_failure,
         jar=emrutils.build_s3_link(constants.SCRIPT_RUNNER_PATH, region),
-        args=step_args)
-    return step
+        args=step_args,
+    )
 
 
 def _build_pig_install_step(region,
@@ -167,17 +171,13 @@ def _build_pig_install_step(region,
         emrutils.build_s3_link(constants.PIG_BASE_PATH, region),
         constants.PIG_VERSIONS,
         constants.LATEST]
-    step = emrutils.build_step(
+    return emrutils.build_step(
         name=constants.INSTALL_PIG_NAME,
         action_on_failure=action_on_failure,
         jar=emrutils.build_s3_link(constants.SCRIPT_RUNNER_PATH, region),
-        args=step_args)
-    return step
+        args=step_args,
+    )
 
 
 def _find_matching_arg(key, args_list):
-    for arg in args_list:
-        if key in arg:
-            return arg
-
-    return None
+    return next((arg for arg in args_list if key in arg), None)

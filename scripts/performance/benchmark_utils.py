@@ -35,10 +35,7 @@ def _get_s3transfer_performance_script(script_name):
     scripts_directory = os.path.join(s3transfer_directory, scripts_directory)
     script = os.path.join(scripts_directory, script_name)
 
-    if os.path.isfile(script):
-        return script
-    else:
-        return None
+    return script if os.path.isfile(script) else None
 
 
 def get_benchmark_script():
@@ -105,11 +102,10 @@ def clean(destination, recursive):
         if recursive:
             rm_args.append('--recursive')
         subprocess.check_call(rm_args)
+    elif recursive:
+        shutil.rmtree(destination)
     else:
-        if recursive:
-            shutil.rmtree(destination)
-        else:
-            os.remove(destination)
+        os.remove(destination)
 
 
 def create_random_subfolder(destination):
@@ -132,7 +128,7 @@ def get_transfer_command(command, recursive, quiet):
 
     Performs common transformations, e.g. adding --quiet
     """
-    cli_command = 'aws s3 ' + command
+    cli_command = f'aws s3 {command}'
 
     if recursive:
         cli_command += ' --recursive'
@@ -189,7 +185,7 @@ def benchmark_command(command, benchmark_script, summarize_script,
 
     try:
         for i in range(num_iterations):
-            out_file = 'performance%s.csv' % i
+            out_file = f'performance{i}.csv'
             out_file = os.path.join(performance_dir, out_file)
             benchmark_args = [
                 benchmark_script, command, '--output-file', out_file

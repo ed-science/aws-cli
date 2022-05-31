@@ -49,16 +49,14 @@ def describe_cluster_response():
                 "subnetIds": [
                     "subnet-00000000000000000",
                     "subnet-00000000000000001",
-                    "subnet-00000000000000002"
+                    "subnet-00000000000000002",
                 ],
                 "vpcId": "vpc-00000000000000000",
-                "securityGroupIds": [
-                    "sg-00000000000000000"
-                ]
+                "securityGroupIds": ["sg-00000000000000000"],
             },
             "version": "1.10",
-            "arn": "arn:aws:eks:region:111222333444:cluster/" + EXAMPLE_NAME,
-            "createdAt": 1500000000.000
+            "arn": f"arn:aws:eks:region:111222333444:cluster/{EXAMPLE_NAME}",
+            "createdAt": 1500000000.000,
         }
     }
 
@@ -76,16 +74,14 @@ def describe_cluster_no_status_response():
                 "subnetIds": [
                     "subnet-00000000000000000",
                     "subnet-00000000000000001",
-                    "subnet-00000000000000002"
+                    "subnet-00000000000000002",
                 ],
                 "vpcId": "vpc-00000000000000000",
-                "securityGroupIds": [
-                    "sg-00000000000000000"
-                ]
+                "securityGroupIds": ["sg-00000000000000000"],
             },
             "version": "1.10",
-            "arn": "arn:aws:eks:region:111222333444:cluster/" + EXAMPLE_NAME,
-            "createdAt": 1500000000.000
+            "arn": f"arn:aws:eks:region:111222333444:cluster/{EXAMPLE_NAME}",
+            "createdAt": 1500000000.000,
         }
     }
 
@@ -101,16 +97,14 @@ def describe_cluster_creating_response():
                 "subnetIds": [
                     "subnet-00000000000000000",
                     "subnet-00000000000000001",
-                    "subnet-00000000000000002"
+                    "subnet-00000000000000002",
                 ],
                 "vpcId": "vpc-00000000000000000",
-                "securityGroupIds": [
-                    "sg-00000000000000000"
-                ]
+                "securityGroupIds": ["sg-00000000000000000"],
             },
             "version": "1.10",
-            "arn": "arn:aws:eks:region:111222333444:cluster/" + EXAMPLE_NAME,
-            "createdAt": 1500000000.000
+            "arn": f"arn:aws:eks:region:111222333444:cluster/{EXAMPLE_NAME}",
+            "createdAt": 1500000000.000,
         }
     }
 
@@ -130,15 +124,13 @@ def describe_cluster_deleting_response():
                 "subnetIds": [
                     "subnet-00000000000000000",
                     "subnet-00000000000000001",
-                    "subnet-00000000000000002"
+                    "subnet-00000000000000002",
                 ],
                 "vpcId": "vpc-00000000000000000",
-                "securityGroupIds": [
-                    "sg-00000000000000000"
-                ]
+                "securityGroupIds": ["sg-00000000000000000"],
             },
             "version": "1.10",
-            "arn": "arn:aws:eks:region:111222333444:cluster/" + EXAMPLE_NAME,
-            "createdAt": 1500000000.000
+            "arn": f"arn:aws:eks:region:111222333444:cluster/{EXAMPLE_NAME}",
+            "createdAt": 1500000000.000,
         }
     }

@@ -31,7 +31,7 @@ class TestBannerResourcesHandling(BaseAWSCommandParamsTest):
     def test_banner_arn_with_colon_raises_exception(self):
         banner_arn = ('arn:aws:s3-object-lambda:us-west-2:123456789012:'
                       'accesspoint:my-accesspoint')
-        banner_arn_with_key = '%s/my-key' % banner_arn
+        banner_arn_with_key = f'{banner_arn}/my-key'
         for prefix in self.prefixes:
             cmdline = prefix.format(banner_arn=banner_arn)
             _, stderr, _ = self.run_cmd(cmdline, 255)
@@ -43,7 +43,7 @@ class TestBannerResourcesHandling(BaseAWSCommandParamsTest):
     def test_banner_arn_with_slash_raises_exception(self):
         banner_arn = ('arn:aws:s3-object-lambda:us-west-2:123456789012:'
                       'accesspoint/my-accesspoint')
-        banner_arn_with_key = '%s/my-key' % banner_arn
+        banner_arn_with_key = f'{banner_arn}/my-key'
         for prefix in self.prefixes:
             cmdline = prefix.format(banner_arn=banner_arn)
             _, stderr, _ = self.run_cmd(cmdline, 255)

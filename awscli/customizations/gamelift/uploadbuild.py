@@ -87,15 +87,17 @@ class UploadBuildCommand(BasicCommand):
         s3_transfer_mgr = S3Transfer(s3_client)
 
         try:
-            fd, temporary_zipfile = tempfile.mkstemp('%s.zip' % build_id)
+            fd, temporary_zipfile = tempfile.mkstemp(f'{build_id}.zip')
             zip_directory(temporary_zipfile, args.build_root)
             s3_transfer_mgr.upload_file(
-                temporary_zipfile, bucket, key,
+                temporary_zipfile,
+                bucket,
+                key,
                 callback=ProgressPercentage(
-                    temporary_zipfile,
-                    label='Uploading ' + args.build_root + ':'
-                )
+                    temporary_zipfile, label=f'Uploading {args.build_root}:'
+                ),
             )
+
         finally:
             os.close(fd)
             os.remove(temporary_zipfile)
@@ -123,14 +125,11 @@ def zip_directory(zipfile_name, source_root):
 def validate_directory(source_root):
     # For Python26 on Windows, passing an empty string equates to the
     # current directory, which is not intended behavior.
-    if not source_root:
-        return False
-    # We walk the root because we want to validate there's at least one file
-    # that exists recursively from the root directory
-    for path, dirs, files in os.walk(source_root):
-        if files:
-            return True
-    return False
+    return (
+        any(files for path, dirs, files in os.walk(source_root))
+        if source_root
+        else False
+    )
 
 
 # TODO: Remove this class once available to CLI from s3transfer

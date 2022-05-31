@@ -59,13 +59,7 @@ class ConfigureSetCommand(BasicCommand):
         # 1. What section we're writing to (profile).
         # 2. The name of the config key (varname)
         # 3. The actual value (value).
-        if '.' not in varname:
-            # unqualified name, scope it to the current
-            # profile (or leave it as the 'default' section if
-            # no profile is set).
-            if self._session.profile is not None:
-                profile = self._session.profile
-        else:
+        if '.' in varname:
             # First figure out if it's been scoped to a profile.
             parts = varname.split('.')
             if parts[0] in ('default', 'profile'):
@@ -94,6 +88,8 @@ class ConfigureSetCommand(BasicCommand):
                 # Otherwise it's something like "set preview.service true"
                 # of something in the [plugin] section.
                 profile, varname = parts
+        elif self._session.profile is not None:
+            profile = self._session.profile
         config_filename = self._get_config_file('config_file')
         if varname in self._WRITE_TO_CREDS_FILE:
             # When writing to the creds file, the section is just the profile

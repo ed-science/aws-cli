@@ -129,9 +129,9 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
 
     def test_deploy_with_defaults(self):
         cmdline = self.PREFIX
-        cmdline += '--service ' + self.service_name
-        cmdline += ' --task-definition ' + self.task_def_file
-        cmdline += ' --codedeploy-appspec ' + self.appspec_file
+        cmdline += f'--service {self.service_name}'
+        cmdline += f' --task-definition {self.task_def_file}'
+        cmdline += f' --codedeploy-appspec {self.appspec_file}'
 
         expected_create_deployment_params = \
             self.mock_deployer._get_create_deploy_request(
@@ -156,10 +156,10 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
 
     def test_deploy_with_default_arns(self):
         cmdline = self.PREFIX
-        cmdline += '--service ' + self.service_arn
-        cmdline += ' --cluster ' + self.cluster_arn
-        cmdline += ' --task-definition ' + self.task_def_file
-        cmdline += ' --codedeploy-appspec ' + self.appspec_file
+        cmdline += f'--service {self.service_arn}'
+        cmdline += f' --cluster {self.cluster_arn}'
+        cmdline += f' --task-definition {self.task_def_file}'
+        cmdline += f' --codedeploy-appspec {self.appspec_file}'
 
         expected_create_deployment_params = \
             self.mock_deployer._get_create_deploy_request(
@@ -184,9 +184,9 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
 
     def test_deploy_with_json_appspec(self):
         cmdline = self.PREFIX
-        cmdline += '--service ' + self.service_name
-        cmdline += ' --task-definition ' + self.task_def_file
-        cmdline += ' --codedeploy-appspec ' + self.appspec_file_json
+        cmdline += f'--service {self.service_name}'
+        cmdline += f' --task-definition {self.task_def_file}'
+        cmdline += f' --codedeploy-appspec {self.appspec_file_json}'
 
         expected_create_deployment_params = \
             self.mock_deployer._get_create_deploy_request(
@@ -211,9 +211,9 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
 
     def test_deploy_with_custom_timeout(self):
         cmdline = self.PREFIX
-        cmdline += '--service ' + self.service_name
-        cmdline += ' --task-definition ' + self.task_def_file
-        cmdline += ' --codedeploy-appspec ' + self.appspec_file
+        cmdline += f'--service {self.service_name}'
+        cmdline += f' --task-definition {self.task_def_file}'
+        cmdline += f' --codedeploy-appspec {self.appspec_file}'
 
         expected_create_deployment_params = \
             self.mock_deployer._get_create_deploy_request(
@@ -271,9 +271,9 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
 
     def test_deploy_with_max_timeout(self):
         cmdline = self.PREFIX
-        cmdline += '--service ' + self.service_name
-        cmdline += ' --task-definition ' + self.task_def_file
-        cmdline += ' --codedeploy-appspec ' + self.appspec_file
+        cmdline += f'--service {self.service_name}'
+        cmdline += f' --task-definition {self.task_def_file}'
+        cmdline += f' --codedeploy-appspec {self.appspec_file}'
 
         expected_create_deployment_params = \
             self.mock_deployer._get_create_deploy_request(
@@ -335,13 +335,13 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
         custom_cluster = 'myOtherCluster'
 
         cmdline = self.PREFIX
-        cmdline += '--service ' + self.service_name
-        cmdline += ' --task-definition ' + self.task_def_file
-        cmdline += ' --codedeploy-appspec ' + self.appspec_file
-        cmdline += ' --cluster ' + self.cluster_name
-        cmdline += ' --codedeploy-application ' + custom_app
-        cmdline += ' --codedeploy-deployment-group ' + custom_dgp
-        cmdline += ' --cluster ' + custom_cluster
+        cmdline += f'--service {self.service_name}'
+        cmdline += f' --task-definition {self.task_def_file}'
+        cmdline += f' --codedeploy-appspec {self.appspec_file}'
+        cmdline += f' --cluster {self.cluster_name}'
+        cmdline += f' --codedeploy-application {custom_app}'
+        cmdline += f' --codedeploy-deployment-group {custom_dgp}'
+        cmdline += f' --cluster {custom_cluster}'
 
         expected_create_deployment_params = \
             self.mock_deployer._get_create_deploy_request(
@@ -361,23 +361,25 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
 
     def test_deploy_error_missing_appspec_property(self):
         cmdline = self.PREFIX
-        cmdline += '--service ' + self.service_name
-        cmdline += ' --task-definition ' + self.task_def_file
-        cmdline += ' --codedeploy-appspec ' + self.missing_properties_appspec
+        cmdline += f'--service {self.service_name}'
+        cmdline += f' --task-definition {self.task_def_file}'
+        cmdline += f' --codedeploy-appspec {self.missing_properties_appspec}'
 
         self.parsed_responses = [
             {
-                'services': [{
-                    'serviceArn': self.service_arn,
-                    'serviceName': self.service_name,
-                    'clusterArn': 'arn:aws:ecs:::cluster/' + self.cluster_name
-                }]
+                'services': [
+                    {
+                        'serviceArn': self.service_arn,
+                        'serviceName': self.service_name,
+                        'clusterArn': f'arn:aws:ecs:::cluster/{self.cluster_name}',
+                    }
+                ]
             },
             {
                 'application': {
                     'applicationId': '876uyh6-45tdfg',
                     'applicationName': self.application_name,
-                    'computePlatform': 'ECS'
+                    'computePlatform': 'ECS',
                 }
             },
             {
@@ -386,27 +388,28 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
                     'deploymentGroupName': self.deployment_group_name,
                     'computePlatform': 'ECS',
                     'blueGreenDeploymentConfiguration': {
-                        'deploymentReadyOption': {
-                            'waitTimeInMinutes': 5
-                        },
+                        'deploymentReadyOption': {'waitTimeInMinutes': 5},
                         'terminateBlueInstancesOnDeploymentSuccess': {
                             'terminationWaitTimeInMinutes': 10
-                        }
+                        },
                     },
-                    'ecsServices': [{
-                        'serviceName': self.service_name,
-                        'clusterName': self.cluster_name
-                    }]
+                    'ecsServices': [
+                        {
+                            'serviceName': self.service_name,
+                            'clusterName': self.cluster_name,
+                        }
+                    ],
                 }
             },
             {
                 'taskDefinition': {
                     'taskDefinitionArn': self.task_definition_arn,
                     'family': 'test',
-                    'containerDefinitions': []
+                    'containerDefinitions': [],
                 }
-            }
+            },
         ]
+
 
         expected_params = [
             {
@@ -447,23 +450,25 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
 
     def test_deploy_error_invalid_platform(self):
         cmdline = self.PREFIX
-        cmdline += '--service ' + self.service_name
-        cmdline += ' --task-definition ' + self.task_def_file
-        cmdline += ' --codedeploy-appspec ' + self.missing_properties_appspec
+        cmdline += f'--service {self.service_name}'
+        cmdline += f' --task-definition {self.task_def_file}'
+        cmdline += f' --codedeploy-appspec {self.missing_properties_appspec}'
 
         self.parsed_responses = [
             {
-                'services': [{
-                    'serviceArn': self.service_arn,
-                    'serviceName': self.service_name,
-                    'clusterArn': 'arn:aws:ecs:::cluster/' + self.cluster_name
-                }]
+                'services': [
+                    {
+                        'serviceArn': self.service_arn,
+                        'serviceName': self.service_name,
+                        'clusterArn': f'arn:aws:ecs:::cluster/{self.cluster_name}',
+                    }
+                ]
             },
             {
                 'application': {
                     'applicationId': '876uyh6-45tdfg',
                     'applicationName': self.application_name,
-                    'computePlatform': 'Server'
+                    'computePlatform': 'Server',
                 }
             },
             {
@@ -471,13 +476,16 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
                     'applicationName': self.application_name,
                     'deploymentGroupName': self.deployment_group_name,
                     'computePlatform': 'ECS',
-                    'ecsServices': [{
-                        'serviceName': self.service_name,
-                        'clusterName': self.cluster_name
-                    }]
+                    'ecsServices': [
+                        {
+                            'serviceName': self.service_name,
+                            'clusterName': self.cluster_name,
+                        }
+                    ],
                 }
-            }
+            },
         ]
+
 
         expected_params = [
             {
@@ -564,17 +572,19 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
     def _get_parsed_responses(self, cluster_name, app_name, dgp_name):
         return [
             {
-                'services': [{
-                    'serviceArn': self.service_arn,
-                    'serviceName': self.service_name,
-                    'clusterArn': 'arn:aws:ecs:::cluster/' + cluster_name
-                }]
+                'services': [
+                    {
+                        'serviceArn': self.service_arn,
+                        'serviceName': self.service_name,
+                        'clusterArn': f'arn:aws:ecs:::cluster/{cluster_name}',
+                    }
+                ]
             },
             {
                 'application': {
                     'applicationId': '876uyh6-45tdfg',
                     'applicationName': app_name,
-                    'computePlatform': 'ECS'
+                    'computePlatform': 'ECS',
                 }
             },
             {
@@ -583,33 +593,31 @@ class TestDeployCommand(BaseAWSCommandParamsTest):
                     'deploymentGroupName': dgp_name,
                     'computePlatform': 'ECS',
                     'blueGreenDeploymentConfiguration': {
-                        'deploymentReadyOption': {
-                            'waitTimeInMinutes': 5
-                        },
+                        'deploymentReadyOption': {'waitTimeInMinutes': 5},
                         'terminateBlueInstancesOnDeploymentSuccess': {
                             'terminationWaitTimeInMinutes': 10
-                        }
+                        },
                     },
-                    'ecsServices': [{
-                        'serviceName': self.service_name,
-                        'clusterName': cluster_name
-                    }]
+                    'ecsServices': [
+                        {
+                            'serviceName': self.service_name,
+                            'clusterName': cluster_name,
+                        }
+                    ],
                 }
             },
             {
                 'taskDefinition': {
                     'taskDefinitionArn': self.task_definition_arn,
                     'family': 'test',
-                    'containerDefinitions': []
+                    'containerDefinitions': [],
                 }
             },
-            {
-                'deploymentId': self.deployment_id
-            },
+            {'deploymentId': self.deployment_id},
             {
                 'deploymentInfo': {
                     'applicationName': app_name,
-                    'status': 'Succeeded'
+                    'status': 'Succeeded',
                 }
-            }
+            },
         ]

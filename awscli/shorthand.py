@@ -91,11 +91,11 @@ class ShorthandParseSyntaxError(ShorthandParseError):
         super(ShorthandParseSyntaxError, self).__init__(msg)
 
     def _construct_msg(self):
-        msg = (
-            "Expected: '%s', received: '%s' for input:\n"
-            "%s"
-        ) % (self.expected, self.actual, self._error_location())
-        return msg
+        return ("Expected: '%s', received: '%s' for input:\n" "%s") % (
+            self.expected,
+            self.actual,
+            self._error_location(),
+        )
 
 
 class DuplicateKeyInObjectError(ShorthandParseError):
@@ -107,12 +107,11 @@ class DuplicateKeyInObjectError(ShorthandParseError):
         super(DuplicateKeyInObjectError, self).__init__(msg)
 
     def _construct_msg(self):
-        msg = (
+        return (
             "Second instance of key \"%s\" encountered for input:\n%s\n"
             "This is often because there is a preceding \",\" instead of a "
             "space."
         ) % (self.key, self._error_location())
-        return msg
 
 
 class DocumentTypesNotSupportedError(Exception):
@@ -172,10 +171,8 @@ class ShorthandParser(object):
         return self._parameter()
 
     def _parameter(self):
-        # parameter = keyval *("," keyval)
-        params = {}
         key, val = self._keyval()
-        params[key] = val
+        params = {key: val}
         last_index = self._index
         while self._index < len(self._input_value):
             self._expect(',', consume_whitespace=True)
@@ -201,9 +198,7 @@ class ShorthandParser(object):
         # key = 1*(alpha / %x30-39 / %x5f / %x2e / %x23)  ; [a-zA-Z0-9\-_.#/]
         valid_chars = string.ascii_letters + string.digits + '-_.#/:'
         start = self._index
-        while not self._at_eof():
-            if self._current() not in valid_chars:
-                break
+        while not self._at_eof() and self._current() in valid_chars:
             self._index += 1
         return self._input_value[start:self._index]
 
@@ -362,8 +357,9 @@ class ShorthandParser(object):
         result = regex.match(self._input_value[self._index:])
         if result is not None:
             return self._consume_matched_regex(result)
-        raise ShorthandParseSyntaxError(self._input_value, '<%s>' % regex.name,
-                                        '<none>', self._index)
+        raise ShorthandParseSyntaxError(
+            self._input_value, f'<{regex.name}>', '<none>', self._index
+        )
 
     def _consume_matched_regex(self, result):
         start, end = result.span()
@@ -395,8 +391,7 @@ class ModelVisitor(object):
         self._visit({}, model, '', params)
 
     def _visit(self, parent, shape, name, value):
-        method = getattr(self, '_visit_%s' % shape.type_name,
-                         self._visit_scalar)
+        method = getattr(self, f'_visit_{shape.type_name}', self._visit_scalar)
         method(parent, shape, name, value)
 
     def _visit_structure(self, parent, shape, name, value):
@@ -444,14 +439,13 @@ class BackCompatVisitor(ModelVisitor):
                 )
 
     def _visit_list(self, parent, shape, name, value):
-        if not isinstance(value, list):
-            # Convert a -> [a] because they specified
-            # "foo=bar", but "bar" should really be ["bar"].
-            if value is not None:
-                parent[name] = [value]
-        else:
+        if isinstance(value, list):
             return super(BackCompatVisitor, self)._visit_list(
                 parent, shape, name, value)
+        # Convert a -> [a] because they specified
+        # "foo=bar", but "bar" should really be ["bar"].
+        if value is not None:
+            parent[name] = [value]
 
     def _visit_scalar(self, parent, shape, name, value):
         if value is None:

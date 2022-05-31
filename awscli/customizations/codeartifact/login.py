@@ -24,14 +24,12 @@ def get_relative_expiration_time(remaining):
         if value > 0:
             if prev_non_zero_attr:
                 values.append("and")
-            values.append(str(value))
-            values.append(attr[:-1] if value == 1 else attr)
+            values.extend((str(value), attr[:-1] if value == 1 else attr))
         if prev_non_zero_attr:
             break
         prev_non_zero_attr = value > 0
 
-    message = " ".join(values)
-    return message
+    return " ".join(values)
 
 
 class BaseLogin(object):
@@ -64,12 +62,12 @@ class BaseLogin(object):
             self.expiration, datetime.now(tzutc())) + relativedelta(seconds=30)
         expiration_message = get_relative_expiration_time(remaining)
 
-        sys.stdout.write('Successfully configured {} to use '
-                         'AWS CodeArtifact repository {} '
-                         .format(tool, self.repository_endpoint))
+        sys.stdout.write(
+            f'Successfully configured {tool} to use AWS CodeArtifact repository {self.repository_endpoint} '
+        )
+
         sys.stdout.write(os.linesep)
-        sys.stdout.write('Login expires in {} at {}'.format(
-            expiration_message, self.expiration))
+        sys.stdout.write(f'Login expires in {expiration_message} at {self.expiration}')
         sys.stdout.write(os.linesep)
 
     def _run_commands(self, tool, commands, dry_run=False):
@@ -166,11 +164,8 @@ class NuGetBaseLogin(BaseLogin):
         # ...
         #   100. Source Name 100
         #       https://source100.com/index.json
-
        # Or it can be (blank line after Registered Sources:)
-
        # Registered Sources:
-
        #   1.  Source Name 1 [Enabled]
        #       https://source1.com/index.json
        #   2.  Source Name 2 [Disabled]
@@ -187,12 +182,10 @@ class NuGetBaseLogin(BaseLogin):
         lines = response.decode("utf-8").splitlines()
         lines = [line for line in lines if line.strip() != '']
 
-        source_to_url_dict = {}
-        for i in range(1, len(lines), 2):
-            source_to_url_dict[self._parse_source_name(lines[i])] = \
-                self._parse_source_url(lines[i + 1])
-
-        return source_to_url_dict
+        return {
+            self._parse_source_name(lines[i]): self._parse_source_url(lines[i + 1])
+            for i in range(1, len(lines), 2)
+        }
 
     def _parse_source_name(self, line):
         # A source name line takes the following form:
@@ -210,7 +203,7 @@ class NuGetBaseLogin(BaseLogin):
         return line.strip()
 
     def _get_source_name(self, codeartifact_url, source_dict):
-        default_name = '{}/{}'.format(self.domain, self.repository)
+        default_name = f'{self.domain}/{self.repository}'
 
         # Check if the CodeArtifact URL is already present in the
         # NuGet.Config file. If the URL already exists, use the source name
@@ -219,16 +212,14 @@ class NuGetBaseLogin(BaseLogin):
             if source_url == codeartifact_url:
                 return source_name, True
 
-        # If the CodeArtifact URL is not present in the NuGet.Config file,
-        # check if the default source name already exists so we can know
-        # whether we need to add a new entry or update the existing entry.
-        for source_name in source_dict.keys():
-            if source_name == default_name:
-                return source_name, True
-
-        # If neither the source url nor the source name already exist in the
-        # NuGet.Config file, use the default source name.
-        return default_name, False
+        return next(
+            (
+                (source_name, True)
+                for source_name in source_dict.keys()
+                if source_name == default_name
+            ),
+            (default_name, False),
+        )
 
     def _get_tool_name(self):
         raise NotImplementedError('_get_tool_name()')
@@ -312,11 +303,7 @@ class NpmLogin(BaseLogin):
             return namespace
 
         # Add @ prefix to scope if it doesn't exist
-        if namespace.startswith('@'):
-            scope = namespace
-        else:
-            scope = '@{}'.format(namespace)
-
+        scope = namespace if namespace.startswith('@') else f'@{namespace}'
         if not valid_scope_name.match(scope):
             raise ValueError(
                 'Invalid scope name, scope must contain URL-safe '
@@ -327,31 +314,22 @@ class NpmLogin(BaseLogin):
 
     @classmethod
     def get_commands(cls, endpoint, auth_token, **kwargs):
-        commands = []
         scope = kwargs.get('scope')
 
         # prepend scope if it exists
-        registry = '{}:registry'.format(scope) if scope else 'registry'
+        registry = f'{scope}:registry' if scope else 'registry'
 
-        # set up the codeartifact repository as the npm registry.
-        commands.append(
-            [cls.NPM_CMD, 'config', 'set', registry, endpoint]
-        )
-
+        commands = [[cls.NPM_CMD, 'config', 'set', registry, endpoint]]
         repo_uri = urlparse.urlsplit(endpoint)
 
         # configure npm to always require auth for the repository.
-        always_auth_config = '//{}{}:always-auth'.format(
-            repo_uri.netloc, repo_uri.path
-        )
+        always_auth_config = f'//{repo_uri.netloc}{repo_uri.path}:always-auth'
         commands.append(
             [cls.NPM_CMD, 'config', 'set', always_auth_config, 'true']
         )
 
         # set auth info for the repository.
-        auth_token_config = '//{}{}:_authToken'.format(
-            repo_uri.netloc, repo_uri.path
-        )
+        auth_token_config = f'//{repo_uri.netloc}{repo_uri.path}:_authToken'
         commands.append(
             [cls.NPM_CMD, 'config', 'set', auth_token_config, auth_token]
         )
@@ -455,7 +433,7 @@ password: {auth_token}'''
                 pypi_rc.set('codeartifact', 'username', 'aws')
                 pypi_rc.set('codeartifact', 'password', auth_token)
             except Exception as e:  # invalid .pypirc file
-                sys.stdout.write('%s is in an invalid state.' % pypi_rc_path)
+                sys.stdout.write(f'{pypi_rc_path} is in an invalid state.')
                 sys.stdout.write(os.linesep)
                 raise e
         else:
@@ -480,9 +458,7 @@ password: {auth_token}'''
         if dry_run:
             sys.stdout.write('Dryrun mode is enabled, not writing to pypirc.')
             sys.stdout.write(os.linesep)
-            sys.stdout.write(
-                '%s would have been set to the following:' % self.pypi_rc_path
-            )
+            sys.stdout.write(f'{self.pypi_rc_path} would have been set to the following:')
             sys.stdout.write(os.linesep)
             sys.stdout.write(os.linesep)
             sys.stdout.write(pypi_rc_str)
@@ -587,9 +563,7 @@ class CodeArtifactLogin(BasicCommand):
         namespace_compatible = self.TOOL_MAP[tool]['namespace_support']
 
         if not namespace_compatible and parsed_args.namespace:
-            raise ValueError(
-                'Argument --namespace is not supported for {}'.format(tool)
-            )
+            raise ValueError(f'Argument --namespace is not supported for {tool}')
         else:
             return parsed_args.namespace
 
@@ -619,10 +593,7 @@ class CodeArtifactLogin(BasicCommand):
         if parsed_args.duration_seconds:
             kwargs['durationSeconds'] = parsed_args.duration_seconds
 
-        get_authorization_token_response = \
-            codeartifact_client.get_authorization_token(**kwargs)
-
-        return get_authorization_token_response
+        return codeartifact_client.get_authorization_token(**kwargs)
 
     def _run_main(self, parsed_args, parsed_globals):
         tool = parsed_args.tool.lower()

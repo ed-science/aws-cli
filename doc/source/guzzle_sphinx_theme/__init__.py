@@ -21,8 +21,7 @@ def setup(app):
 
 def add_html_link(app, pagename, templatename, context, doctree):
     """As each page is built, collect page names for the sitemap"""
-    base_url = app.config['html_theme_options'].get('base_url', '')
-    if base_url:
+    if base_url := app.config['html_theme_options'].get('base_url', ''):
         app.sitemap_links.append(base_url + pagename + ".html")
 
 
@@ -33,8 +32,8 @@ def create_sitemap(app, exception):
            not app.sitemap_links):
         return
 
-    filename = app.outdir + "/sitemap.xml"
-    print("Generating sitemap.xml in %s" % filename)
+    filename = f"{app.outdir}/sitemap.xml"
+    print(f"Generating sitemap.xml in {filename}")
 
     root = ET.Element("urlset")
     root.set("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")

@@ -94,8 +94,7 @@ class SessionStubber(object):
     def assert_no_remaining_responses(self):
         if len(self._responses) != 0:
             raise AssertionError(
-                "The following queued responses are remaining: %s" %
-                self._responses
+                f"The following queued responses are remaining: {self._responses}"
             )
 
     def _capture_aws_request(self, params, model, context, **kwargs):
@@ -264,7 +263,7 @@ class HTTPRequest(object):
 # CaseInsensitiveDict from requests that must be serializble.
 class CaseInsensitiveDict(collections_abc.MutableMapping):
     def __init__(self, data=None, **kwargs):
-        self._store = dict()
+        self._store = {}
         if data is None:
             data = {}
         self.update(data, **kwargs)

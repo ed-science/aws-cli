@@ -72,8 +72,7 @@ class _ExampleTests(BaseAWSHelpOutputTest):
 def _get_example_test_cases():
     test_cases = []
     for command, subcommands in COMMAND_EXAMPLES.items():
-        for subcommand in subcommands:
-            test_cases.append((command, subcommand))
+        test_cases.extend((command, subcommand) for subcommand in subcommands)
     return test_cases
 
 
@@ -141,8 +140,7 @@ def test_rst_doc_examples(command_validator, example_file):
 def verify_no_http_links(filename):
     with open(filename) as f:
         contents = f.read()
-    match = HTTP_LINK_REGEX.search(contents)
-    if match:
+    if match := HTTP_LINK_REGEX.search(contents):
         error_line_number = line_num(contents, match.span()[0])
         error_line = extract_error_line(
             contents, match.span()[0], match.span()[1])
@@ -220,9 +218,10 @@ def _make_error_msg(filename, errors):
         if line_number > 0:
             line_number -= 1
         current_message = [
-            'Line %s: %s' % (error['line_number'], error['msg']),
-            '  %s' % lines[line_number],
+            f"Line {error['line_number']}: {error['msg']}",
+            f'  {lines[line_number]}',
         ]
+
         failure_message.extend(current_message)
     return '\n'.join(failure_message)
 

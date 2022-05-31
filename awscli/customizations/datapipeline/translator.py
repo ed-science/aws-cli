@@ -126,8 +126,7 @@ def definition_to_parameter_values(definition):
 def _parse_each_field(key, value):
     values = []
     if isinstance(value, list):
-        for item in value:
-            values.append(_convert_single_field(key, item))
+        values.extend(_convert_single_field(key, item) for item in value)
     else:
         values.append(_convert_single_field(key, value))
     return values

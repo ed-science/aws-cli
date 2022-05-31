@@ -485,19 +485,7 @@ class ListCommand(S3Command):
                 bucket, key, parsed_args.page_size, parsed_args.request_payer)
         if parsed_args.summarize:
             self._print_summary()
-        if key:
-            # User specified a key to look for. We should return an rc of one
-            # if there are no matching keys and/or prefixes or return an rc
-            # of zero if there are matching keys or prefixes.
-            return self._check_no_objects()
-        else:
-            # This covers the case when user is trying to list all of of
-            # the buckets or is trying to list the objects of a bucket
-            # (without specifying a key). For both situations, a rc of 0
-            # should be returned because applicable errors are supplied by
-            # the server (i.e. bucket not existing). These errors will be
-            # thrown before reaching the automatic return of rc of zero.
-            return 0
+        return self._check_no_objects() if key else 0
 
     def _list_all_objects(self, bucket, key, page_size=None,
                           request_payer=None):
@@ -518,11 +506,11 @@ class ListCommand(S3Command):
         if not contents and not common_prefixes:
             self._empty_result = True
             return
+        pre_string = "PRE".rjust(30, " ")
         for common_prefix in common_prefixes:
             prefix_components = common_prefix['Prefix'].split('/')
             prefix = prefix_components[-2]
-            pre_string = "PRE".rjust(30, " ")
-            print_str = pre_string + ' ' + prefix + '/\n'
+            print_str = f'{pre_string} {prefix}' + '/\n'
             uni_print(print_str)
         for content in contents:
             last_mod_str = self._make_last_mod_str(content['LastModified'])
@@ -534,8 +522,7 @@ class ListCommand(S3Command):
                 filename = filename_components[-1]
             else:
                 filename = content['Key']
-            print_str = last_mod_str + ' ' + size_str + ' ' + \
-                filename + '\n'
+            print_str = ((f'{last_mod_str} {size_str} ' + filename) + '\n')
             uni_print(print_str)
         self._at_first_page = False
 
@@ -544,7 +531,7 @@ class ListCommand(S3Command):
         buckets = response_data['Buckets']
         for bucket in buckets:
             last_mod_str = self._make_last_mod_str(bucket['CreationDate'])
-            print_str = last_mod_str + ' ' + bucket['Name'] + '\n'
+            print_str = f'{last_mod_str} ' + bucket['Name'] + '\n'
             uni_print(print_str)
 
     def _list_all_objects_recursive(self, bucket, key, page_size=None,
@@ -561,11 +548,7 @@ class ListCommand(S3Command):
             self._display_page(response_data, use_basename=False)
 
     def _check_no_objects(self):
-        if self._empty_result and self._at_first_page:
-            # Nothing was returned in the first page of results when listing
-            # the objects.
-            return 1
-        return 0
+        return 1 if self._empty_result and self._at_first_page else 0
 
     def _make_last_mod_str(self, last_mod):
         """
@@ -586,10 +569,7 @@ class ListCommand(S3Command):
         """
         This function creates the size string when objects are being listed.
         """
-        if self._human_readable:
-            size_str = human_readable_size(size)
-        else:
-            size_str = str(size)
+        size_str = human_readable_size(size) if self._human_readable else str(size)
         return size_str.rjust(10, ' ')
 
     def _print_summary(self):
@@ -882,15 +862,17 @@ class CommandArchitecture(object):
             verify=self.parameters['verify_ssl'],
             config=client_config
         )
-        if self.parameters['source_region']:
-            if self.parameters['paths_type'] == 's3s3':
-                self._source_client = get_client(
-                    self.session,
-                    region=self.parameters['source_region'],
-                    endpoint_url=None,
-                    verify=self.parameters['verify_ssl'],
-                    config=client_config
-                )
+        if (
+            self.parameters['source_region']
+            and self.parameters['paths_type'] == 's3s3'
+        ):
+            self._source_client = get_client(
+                self.session,
+                region=self.parameters['source_region'],
+                endpoint_url=None,
+                verify=self.parameters['verify_ssl'],
+                config=client_config
+            )
 
     def create_instructions(self):
         """
@@ -919,10 +901,10 @@ class CommandArchitecture(object):
         strategy can override the default strategy if it returns the instance
         of its self when the event is emitted.
         """
-        sync_strategies = {}
-        # Set the default strategies.
-        sync_strategies['file_at_src_and_dest_sync_strategy'] = \
-            SizeAndLastModifiedSync()
+        sync_strategies = {
+            'file_at_src_and_dest_sync_strategy': SizeAndLastModifiedSync()
+        }
+
         sync_strategies['file_not_at_dest_sync_strategy'] = MissingFileSync()
         sync_strategies['file_not_at_src_sync_strategy'] = NeverSync()
 
@@ -1143,10 +1125,7 @@ class CommandParameters(object):
             self.parameters['source_region'] = None
         if self.cmd in ['sync', 'mb', 'rb']:
             self.parameters['dir_op'] = True
-        if self.cmd == 'mv':
-            self.parameters['is_move'] = True
-        else:
-            self.parameters['is_move'] = False
+        self.parameters['is_move'] = self.cmd == 'mv'
 
     def add_paths(self, paths):
         """
@@ -1188,20 +1167,15 @@ class CommandParameters(object):
 
         # If the user provided local path does not exist, hard fail because
         # we know that we will not be able to upload the file.
-        if 'locals3' == params['paths_type'] and not params['is_stream']:
+        if params['paths_type'] == 'locals3' and not params['is_stream']:
             if not os.path.exists(params['src']):
-                raise RuntimeError(
-                    'The user-provided path %s does not exist.' %
-                    params['src'])
-        # If the operation is downloading to a directory that does not exist,
-        # create the directories so no warnings are thrown during the syncing
-        # process.
-        elif 's3local' == params['paths_type'] and params['dir_op']:
+                raise RuntimeError(f"The user-provided path {params['src']} does not exist.")
+        elif params['paths_type'] == 's3local' and params['dir_op']:
             if not os.path.exists(params['dest']):
                 os.makedirs(params['dest'])
 
     def _same_path(self, src, dest):
-        if not self.parameters['paths_type'] == 's3s3':
+        if self.parameters['paths_type'] != 's3s3':
             return False
         elif src == dest:
             return True
@@ -1231,13 +1205,12 @@ class CommandParameters(object):
                          's3': ['mb', 'rb', 'rm'],
                          'local': [], 'locallocal': []}
         paths_type = ''
-        usage = "usage: aws s3 %s %s" % (self.cmd,
-                                         self.usage)
+        usage = f"usage: aws s3 {self.cmd} {self.usage}"
         for i in range(len(paths)):
             if paths[i].startswith('s3://'):
-                paths_type = paths_type + 's3'
+                paths_type = f'{paths_type}s3'
             else:
-                paths_type = paths_type + 'local'
+                paths_type = f'{paths_type}local'
         if self.cmd in template_type[paths_type]:
             self.parameters['paths_type'] = paths_type
         else:
@@ -1268,26 +1241,30 @@ class CommandParameters(object):
         self._validate_sse_c_copy_source_for_paths()
 
     def _validate_sse_c_arg(self, sse_c_type='sse_c'):
-        sse_c_key_type = sse_c_type + '_key'
+        sse_c_key_type = f'{sse_c_type}_key'
         sse_c_type_param = '--' + sse_c_type.replace('_', '-')
         sse_c_key_type_param = '--' + sse_c_key_type.replace('_', '-')
-        if self.parameters.get(sse_c_type):
-            if not self.parameters.get(sse_c_key_type):
-                raise ValueError(
-                    'It %s is specified, %s must be specified '
-                    'as well.' % (sse_c_type_param, sse_c_key_type_param)
-                )
-        if self.parameters.get(sse_c_key_type):
-            if not self.parameters.get(sse_c_type):
-                raise ValueError(
-                    'It %s is specified, %s must be specified '
-                    'as well.' % (sse_c_key_type_param, sse_c_type_param)
-                )
+        if self.parameters.get(sse_c_type) and not self.parameters.get(
+            sse_c_key_type
+        ):
+            raise ValueError(
+                'It %s is specified, %s must be specified '
+                'as well.' % (sse_c_type_param, sse_c_key_type_param)
+            )
+        if self.parameters.get(sse_c_key_type) and not self.parameters.get(
+            sse_c_type
+        ):
+            raise ValueError(
+                'It %s is specified, %s must be specified '
+                'as well.' % (sse_c_key_type_param, sse_c_type_param)
+            )
 
     def _validate_sse_c_copy_source_for_paths(self):
-        if self.parameters.get('sse_c_copy_source'):
-            if self.parameters['paths_type'] != 's3s3':
-                raise ValueError(
-                    '--sse-c-copy-source is only supported for '
-                    'copy operations.'
-                )
+        if (
+            self.parameters.get('sse_c_copy_source')
+            and self.parameters['paths_type'] != 's3s3'
+        ):
+            raise ValueError(
+                '--sse-c-copy-source is only supported for '
+                'copy operations.'
+            )

@@ -42,12 +42,10 @@ class TestAssumeRoleCredentials(unittest.TestCase):
             "Statement": [
                 {
                     "Effect": "Allow",
-                    "Principal": {
-                        "AWS": "arn:aws:iam::%s:root" % account_id
-                    },
-                    "Action": "sts:AssumeRole"
+                    "Principal": {"AWS": f"arn:aws:iam::{account_id}:root"},
+                    "Action": "sts:AssumeRole",
                 }
-            ]
+            ],
         }
 
     def tearDown(self):
@@ -55,7 +53,7 @@ class TestAssumeRoleCredentials(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def random_name(self):
-        return 'clitest-' + random_chars(10)
+        return f'clitest-{random_chars(10)}'
 
     def create_role(self, policy_document, policy_arn=None):
         name = self.random_name()
@@ -124,7 +122,7 @@ class TestAssumeRoleCredentials(unittest.TestCase):
                 attempts_remaining -= 1
             time.sleep(delay)
 
-        raise Exception("Unable to assume role %s" % role_arn)
+        raise Exception(f"Unable to assume role {role_arn}")
 
     def create_assume_policy(self, role_arn):
         policy_document = {
@@ -149,12 +147,12 @@ class TestAssumeRoleCredentials(unittest.TestCase):
 
     def assert_s3_read_only_profile(self, profile_name):
         # Calls to S3 should succeed
-        command = 's3api list-buckets --profile %s' % profile_name
+        command = f's3api list-buckets --profile {profile_name}'
         result = aws(command, env_vars=self.environ)
         self.assertEqual(result.rc, 0, result.stderr)
 
         # Calls to other services should not
-        command = 'iam list-groups --profile %s' % profile_name
+        command = f'iam list-groups --profile {profile_name}'
         result = aws(command, env_vars=self.environ)
         self.assertNotEqual(result.rc, 0, result.stdout)
         self.assertIn('AccessDenied', result.stderr)
@@ -187,10 +185,13 @@ class TestAssumeRoleCredentials(unittest.TestCase):
             'source_profile = middle\n'
             'role_arn = %s\n'
         )
-        config = config % (
-            user_creds['AccessKeyId'], user_creds['SecretAccessKey'],
-            middle_role['Arn'], final_role['Arn']
+        config %= (
+            user_creds['AccessKeyId'],
+            user_creds['SecretAccessKey'],
+            middle_role['Arn'],
+            final_role['Arn'],
         )
+
         with open(self.config_file, 'w') as f:
             f.write(config)
 
@@ -228,7 +229,7 @@ class TestAssumeRoleCredentials(unittest.TestCase):
             'role_arn = %s\n'
             'credential_source = Environment\n'
         )
-        config = config % role['Arn']
+        config %= role['Arn']
         with open(self.config_file, 'w') as f:
             f.write(config)
 

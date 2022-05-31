@@ -19,11 +19,11 @@ class TestDescribeStacks(BaseAWSCommandParamsTest):
     prefix = 'cloudformation describe-stacks '
 
     def test_can_single_argument(self):
-        cmdline = self.prefix + '--stack-name test-stack'
+        cmdline = f'{self.prefix}--stack-name test-stack'
         result = {'StackName': 'test-stack'}
         self.assert_params_for_cmd(cmdline, result)
 
     def test_can_specify_no_paginate(self):
-        cmdline = self.prefix + '--stack-name test-stack --no-paginate'
+        cmdline = f'{self.prefix}--stack-name test-stack --no-paginate'
         result = {'StackName': 'test-stack'}
         self.assert_params_for_cmd(cmdline, result)

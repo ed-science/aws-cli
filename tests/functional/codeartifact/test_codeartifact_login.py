@@ -28,7 +28,7 @@ class TestCodeArtifactLogin(unittest.TestCase):
         self.auth_token = 'auth-token'
         self.namespace = 'namespace'
         self.nuget_index_url_fmt = '{endpoint}v3/index.json'
-        self.nuget_source_name = self.domain + '/' + self.repository
+        self.nuget_source_name = f'{self.domain}/{self.repository}'
         self.duration = 3600
         self.expiration = time.time() + self.duration
         self.expiration_as_datetime = parse_timestamp(self.expiration)
@@ -111,61 +111,59 @@ class TestCodeArtifactLogin(unittest.TestCase):
             endpoint=self.endpoint
         )
 
-        commands = []
-        commands.append(
+        return [
             [
-                'nuget', 'sources', 'add',
-                '-name', self.nuget_source_name,
-                '-source', nuget_index_url,
-                '-username', 'aws',
-                '-password', self.auth_token
+                'nuget',
+                'sources',
+                'add',
+                '-name',
+                self.nuget_source_name,
+                '-source',
+                nuget_index_url,
+                '-username',
+                'aws',
+                '-password',
+                self.auth_token,
             ]
-        )
-        return commands
+        ]
 
     def _get_dotnet_commands(self):
         nuget_index_url = self.nuget_index_url_fmt.format(
             endpoint=self.endpoint
         )
 
-        commands = []
-        commands.append(
+        return [
             [
-                'dotnet', 'nuget', 'add', 'source', nuget_index_url,
-                '--name', self.nuget_source_name,
-                '--username', 'aws',
-                '--password', self.auth_token
+                'dotnet',
+                'nuget',
+                'add',
+                'source',
+                nuget_index_url,
+                '--name',
+                self.nuget_source_name,
+                '--username',
+                'aws',
+                '--password',
+                self.auth_token,
             ]
-        )
-        return commands
+        ]
 
     def _get_npm_commands(self, **kwargs):
         npm_cmd = 'npm.cmd' \
             if platform.system().lower() == 'windows' else 'npm'
 
         repo_uri = urlparse.urlsplit(self.endpoint)
-        always_auth_config = '//{}{}:always-auth'.format(
-            repo_uri.netloc, repo_uri.path
-        )
-        auth_token_config = '//{}{}:_authToken'.format(
-            repo_uri.netloc, repo_uri.path
-        )
+        always_auth_config = f'//{repo_uri.netloc}{repo_uri.path}:always-auth'
+        auth_token_config = f'//{repo_uri.netloc}{repo_uri.path}:_authToken'
 
         scope = kwargs.get('scope')
-        registry = '{}:registry'.format(scope) if scope else 'registry'
+        registry = f'{scope}:registry' if scope else 'registry'
 
-        commands = []
-        commands.append(
-            [npm_cmd, 'config', 'set', registry, self.endpoint]
-        )
-        commands.append(
-            [npm_cmd, 'config', 'set', always_auth_config, 'true']
-        )
-        commands.append(
-            [npm_cmd, 'config', 'set', auth_token_config, self.auth_token]
-        )
-
-        return commands
+        return [
+            [npm_cmd, 'config', 'set', registry, self.endpoint],
+            [npm_cmd, 'config', 'set', always_auth_config, 'true'],
+            [npm_cmd, 'config', 'set', auth_token_config, self.auth_token],
+        ]
 
     def _get_pip_commands(self):
         pip_index_url_fmt = '{scheme}://aws:{auth_token}@{netloc}{path}simple/'
@@ -229,8 +227,8 @@ password: {auth_token}'''
 
     def _assert_expiration_printed_to_stdout(self, stdout):
         self.assertEqual(
-            self.expiration_as_datetime.strftime(
-                "%Y-%m-%d %H:%M:%S"), stdout.split("at ")[1][0:19]
+            self.expiration_as_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            stdout.split("at ")[1][:19],
         )
 
     def _assert_operations_called(
@@ -630,7 +628,7 @@ password: {auth_token}'''
         self._assert_operations_called(package_format='npm', result=result)
         self._assert_expiration_printed_to_stdout(result.stdout)
         self._assert_subprocess_execution(
-            self._get_npm_commands(scope='@{}'.format(self.namespace))
+            self._get_npm_commands(scope=f'@{self.namespace}')
         )
 
     def test_npm_login_with_namespace_dry_run(self):
@@ -641,8 +639,7 @@ password: {auth_token}'''
         self.assertEqual(result.rc, 0)
         self._assert_operations_called(package_format='npm', result=result)
         self._assert_dry_run_execution(
-            self._get_npm_commands(scope='@{}'.format(self.namespace)),
-            result.stdout
+            self._get_npm_commands(scope=f'@{self.namespace}'), result.stdout
         )
 
     def test_pip_login_without_domain_owner(self):

@@ -171,11 +171,7 @@ class FileGenerator(object):
         join, isdir, isfile = os.path.join, os.path.isdir, os.path.isfile
         error, listdir = os.error, os.listdir
         if not self.should_ignore_file(path):
-            if not dir_op:
-                stats = self._safely_get_file_stats(path)
-                if stats:
-                    yield stats
-            else:
+            if dir_op:
                 # We need to list files in byte order based on the full
                 # expanded path of the key: 'test/1/2/3.txt'  However,
                 # listdir() will only give us contents a single directory
@@ -204,12 +200,11 @@ class FileGenerator(object):
                         # means we need to recurse into this sub directory
                         # before yielding the rest of this directory's
                         # contents.
-                        for x in self.list_files(file_path, dir_op):
-                            yield x
-                    else:
-                        stats = self._safely_get_file_stats(file_path)
-                        if stats:
-                            yield stats
+                        yield from self.list_files(file_path, dir_op)
+                    elif stats := self._safely_get_file_stats(file_path):
+                        yield stats
+            elif stats := self._safely_get_file_stats(path):
+                yield stats
 
     def _safely_get_file_stats(self, file_path):
         try:
@@ -271,8 +266,7 @@ class FileGenerator(object):
                 path = path[:-1]
             if os.path.islink(path):
                 return True
-        warning_triggered = self.triggers_warning(path)
-        if warning_triggered:
+        if warning_triggered := self.triggers_warning(path):
             return True
         return False
 
@@ -332,9 +326,7 @@ class FileGenerator(object):
                         # exist locally.  But user should be able to
                         # delete them.
                         yield source_path, response_data
-                elif not dir_op and s3_path != source_path:
-                    pass
-                else:
+                elif dir_op or s3_path == source_path:
                     yield source_path, response_data
 
     def _list_single_object(self, s3_path):
@@ -351,13 +343,13 @@ class FileGenerator(object):
         bucket, key = find_bucket_key(s3_path)
         try:
             params = {'Bucket': bucket, 'Key': key}
-            params.update(self.request_parameters.get('HeadObject', {}))
+            params |= self.request_parameters.get('HeadObject', {})
             response = self._client.head_object(**params)
         except ClientError as e:
             # We want to try to give a more helpful error message.
             # This is what the customer is going to see so we want to
             # give as much detail as we have.
-            if not e.response['Error']['Code'] == '404':
+            if e.response['Error']['Code'] != '404':
                 raise
             # The key does not exist so we'll raise a more specific
             # error message here.

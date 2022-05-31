@@ -112,7 +112,7 @@ def add_paging_description(help_command, **kwargs):
         queries = paginator_config['result_key']
         if type(queries) is not list:
             queries = [queries]
-        queries = ", ".join([('``%s``' % s) for s in queries])
+        queries = ", ".join([f'``{s}``' for s in queries])
         help_command.doc.writeln(
             ('When using ``--output text`` and the ``--query`` argument on a '
              'paginated response, the ``--query`` argument must extract data '
@@ -209,10 +209,11 @@ def check_should_enable_pagination(input_tokens, shadowed_args, argument_table,
 def ensure_paging_params_not_set(parsed_args, shadowed_args):
     paging_params = ['starting_token', 'page_size', 'max_items']
     shadowed_params = [p.replace('-', '_') for p in shadowed_args.keys()]
-    params_used = [p for p in paging_params if
-                   p not in shadowed_params and getattr(parsed_args, p, None)]
-
-    if len(params_used) > 0:
+    if params_used := [
+        p
+        for p in paging_params
+        if p not in shadowed_params and getattr(parsed_args, p, None)
+    ]:
         converted_params = ', '.join(
             ["--" + p.replace('_', '-') for p in params_used])
         raise PaginationError(
@@ -230,12 +231,10 @@ def _get_all_cli_input_tokens(pagination_config):
     # if it exists.
     tokens = _get_input_tokens(pagination_config)
     for token_name in tokens:
-        cli_name = xform_name(token_name, '-')
-        yield cli_name
+        yield xform_name(token_name, '-')
     if 'limit_key' in pagination_config:
         key_name = pagination_config['limit_key']
-        cli_name = xform_name(key_name, '-')
-        yield cli_name
+        yield xform_name(key_name, '-')
 
 
 def _get_input_tokens(pagination_config):
@@ -268,7 +267,7 @@ class PageArgument(BaseCLIArgument):
 
     @property
     def cli_name(self):
-        return '--' + self._name
+        return f'--{self._name}'
 
     @property
     def cli_type_name(self):

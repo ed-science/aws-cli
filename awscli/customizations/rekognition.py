@@ -33,8 +33,10 @@ FILE_PARAMETER_UPDATES = {
 def register_rekognition_detect_labels(cli):
     for target, new_param in FILE_PARAMETER_UPDATES.items():
         operation, old_param = target.rsplit('.', 1)
-        cli.register('building-argument-table.rekognition.%s' % operation,
-                     ImageArgUpdater(old_param, new_param))
+        cli.register(
+            f'building-argument-table.rekognition.{operation}',
+            ImageArgUpdater(old_param, new_param),
+        )
 
 
 class ImageArgUpdater(object):

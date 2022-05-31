@@ -51,10 +51,7 @@ class TestShow(unittest.TestCase):
             current_pos = new_pos
 
     def test_show(self):
-        # Make a call that does not require credentials just in case the
-        # user was using the config file to provide credentials.
-        cmd = 'sts assume-role-with-saml '
-        cmd += '--role-arn  arn:aws:iam::...:invalid '
+        cmd = 'sts assume-role-with-saml ' + '--role-arn  arn:aws:iam::...:invalid '
         cmd += '--principal-arn  arn:aws:iam::...:invalid  '
         cmd += '--saml-assertion fake-assertion'
         aws(cmd, env_vars=self.environ)

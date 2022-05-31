@@ -294,8 +294,7 @@ class DeployCommand(BasicCommand):
         if template_size > 51200 and not parsed_args.s3_bucket:
             raise exceptions.DeployBucketRequiredError()
 
-        bucket = parsed_args.s3_bucket
-        if bucket:
+        if bucket := parsed_args.s3_bucket:
             s3_client = self._session.create_client(
                 "s3",
                 config=Config(signature_version='s3v4'),

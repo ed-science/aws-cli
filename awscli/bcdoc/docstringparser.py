@@ -69,21 +69,14 @@ class HTMLTree(object):
             return
 
         if is_start:
-            if tag == 'li':
-                node = LineItemNode(attrs)
-            else:
-                node = TagNode(tag, attrs)
+            node = LineItemNode(attrs) if tag == 'li' else TagNode(tag, attrs)
             self.current_node.add_child(node)
             self.current_node = node
         else:
             self.current_node = self.current_node.parent
 
     def _doc_has_handler(self, tag, is_start):
-        if is_start:
-            handler_name = 'start_%s' % tag
-        else:
-            handler_name = 'end_%s' % tag
-
+        handler_name = f'start_{tag}' if is_start else f'end_{tag}'
         return hasattr(self.doc.style, handler_name)
 
     def add_data(self, data):
@@ -133,12 +126,12 @@ class TagNode(StemNode):
         self._write_end(doc)
 
     def _write_start(self, doc):
-        handler_name = 'start_%s' % self.tag
+        handler_name = f'start_{self.tag}'
         if hasattr(doc.style, handler_name):
             getattr(doc.style, handler_name)(self.attrs)
 
     def _write_end(self, doc):
-        handler_name = 'end_%s' % self.tag
+        handler_name = f'end_{self.tag}'
         if hasattr(doc.style, handler_name):
             getattr(doc.style, handler_name)()
 
@@ -162,10 +155,8 @@ class LineItemNode(TagNode):
                 child.lstrip()
                 if child.data:
                     return True
-            else:
-                found = self._lstrip(child)
-                if found:
-                    return True
+            elif found := self._lstrip(child):
+                return True
 
         return False
 
@@ -177,7 +168,7 @@ class DataNode(Node):
     def __init__(self, data, parent=None):
         super(DataNode, self).__init__(parent)
         if not isinstance(data, six.string_types):
-            raise ValueError("Expecting string type, %s given." % type(data))
+            raise ValueError(f"Expecting string type, {type(data)} given.")
         self.data = data
 
     def lstrip(self):

@@ -56,10 +56,10 @@ class Command(BasicCommand):
                 parsed_configs[configuration.name]
 
         if configs_added:
-            LOG.debug("Updated arguments with configs: %s" % configs_added)
+            LOG.debug(f"Updated arguments with configs: {configs_added}")
         else:
             LOG.debug("No configs applied")
-        LOG.debug("Running command with args: %s" % parsed_args)
+        LOG.debug(f"Running command with args: {parsed_args}")
 
     def _get_applicable_configurations(self, parsed_args, parsed_configs):
         # We need to find the applicable configurations by applying
@@ -104,10 +104,13 @@ class Command(BasicCommand):
 
         if (command in self.UNSUPPORTED_COMMANDS_FOR_RELEASE_BASED_CLUSTERS and
                 hasattr(parsed_args, 'cluster_id')):
-            release_label = emrutils.get_release_label(
-                parsed_args.cluster_id, self._session, self.region,
-                parsed_globals.endpoint_url, parsed_globals.verify_ssl)
-            if release_label:
+            if release_label := emrutils.get_release_label(
+                parsed_args.cluster_id,
+                self._session,
+                self.region,
+                parsed_globals.endpoint_url,
+                parsed_globals.verify_ssl,
+            ):
                 raise exceptions.UnsupportedCommandWithReleaseError(
                     command=command,
                     release_label=release_label)
@@ -119,8 +122,7 @@ def override_args_required_option(argument_table, args, session, **kwargs):
     # file
     # We don't want to override when user is viewing the help so that we
     # can show the required options correctly in the help
-    need_to_override = False if len(args) == 1 and args[0] == 'help' \
-        else True
+    need_to_override = len(args) != 1 or args[0] != 'help'
 
     if need_to_override:
         parsed_configs = configutils.get_configs(session)

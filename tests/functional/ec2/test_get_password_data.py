@@ -54,7 +54,7 @@ class TestGetPasswordData(BaseAWSCommandParamsTest):
     def test_priv_launch_key(self):
         key_path = os.path.join(os.path.dirname(__file__),
                                 'testcli.pem')
-        args = ' --instance-id i-12345678 --priv-launch-key %s' % key_path
+        args = f' --instance-id i-12345678 --priv-launch-key {key_path}'
         cmdline = self.prefix + args
         result = {'InstanceId': 'i-12345678'}
         output = self.assert_params_for_cmd(cmdline, result, expected_rc=0)[0]

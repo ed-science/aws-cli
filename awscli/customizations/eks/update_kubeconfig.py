@@ -189,7 +189,7 @@ class KubeconfigSelector(object):
             self._paths = [self._expand_path(element)
                            for element in env_variable.split(os.pathsep)
                            if len(element.strip()) > 0]
-            if len(self._paths) == 0:
+            if not self._paths:
                 self._paths = [DEFAULT_PATH]
 
     def choose_kubeconfig(self, cluster_name):

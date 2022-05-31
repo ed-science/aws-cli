@@ -68,22 +68,23 @@ def get_service_principal(service, endpoint_host, session=None):
     if session is None:
         session = botocore.session.Session()
 
-    if service == EMR_AUTOSCALING_SERVICE_NAME:
-        if region not in session.get_available_regions('emr', 'aws-cn'):
-            return EMR_AUTOSCALING_SERVICE_PRINCIPAL
+    if (
+        service == EMR_AUTOSCALING_SERVICE_NAME
+        and region not in session.get_available_regions('emr', 'aws-cn')
+    ):
+        return EMR_AUTOSCALING_SERVICE_PRINCIPAL
 
-    return service + '.' + suffix
+    return f'{service}.{suffix}'
 
 
 def _get_suffix_and_region_from_endpoint_host(endpoint_host):
     suffix_match = _get_regex_match_from_endpoint_host(endpoint_host)
 
-    if suffix_match is not None and suffix_match.lastindex >= 3:
-        suffix = suffix_match.group(3)
-        region = suffix_match.group(2)
-    else:
+    if suffix_match is None or suffix_match.lastindex < 3:
         raise ResolveServicePrincipalError
 
+    suffix = suffix_match.group(3)
+    region = suffix_match.group(2)
     return suffix, region
 
 
@@ -150,11 +151,18 @@ class CreateDefaultRoles(Command):
         instance_profile_name = EC2_ROLE_NAME
         if self.check_if_instance_profile_exists(instance_profile_name,
                                                  parsed_globals):
-            LOG.debug('Instance Profile ' + instance_profile_name + ' exists.')
+            LOG.debug(f'Instance Profile {instance_profile_name} exists.')
         else:
-            LOG.debug('Instance Profile ' + instance_profile_name +
-                      'does not exist. Creating default Instance Profile ' +
-                      instance_profile_name)
+            LOG.debug(
+                (
+                    (
+                        f'Instance Profile {instance_profile_name}'
+                        + 'does not exist. Creating default Instance Profile '
+                    )
+                    + instance_profile_name
+                )
+            )
+
             self._create_instance_profile_with_role(instance_profile_name,
                                                     instance_profile_name,
                                                     parsed_globals)
@@ -184,10 +192,18 @@ class CreateDefaultRoles(Command):
         policy = None
 
         if self.check_if_role_exists(role_name, parsed_globals):
-            LOG.debug('Role ' + role_name + ' exists.')
+            LOG.debug(f'Role {role_name} exists.')
         else:
-            LOG.debug('Role ' + role_name + ' does not exist.'
-                      ' Creating default role: ' + role_name)
+            LOG.debug(
+                (
+                    (
+                        f'Role {role_name}' + ' does not exist.'
+                        ' Creating default role: '
+                    )
+                    + role_name
+                )
+            )
+
             role_arn = get_role_policy_arn(self.region, policy_name)
             result = self._create_role_with_role_policy(
                     role_name, service_names, role_arn, parsed_globals)
@@ -255,8 +271,7 @@ class CreateDefaultRoles(Command):
         return True
 
     def _get_role_policy(self, arn, parsed_globals):
-        parameters = {}
-        parameters['PolicyArn'] = arn
+        parameters = {'PolicyArn': arn}
         policy_details = self._call_iam_operation('GetPolicy', parameters,
                                                   parsed_globals)
         parameters["VersionId"] = policy_details["Policy"]["DefaultVersionId"]
@@ -272,10 +287,12 @@ class CreateDefaultRoles(Command):
             service_principal = get_service_principal(
                 service_names[0], self.emr_endpoint_url, self._session)
         else:
-            service_principal = []
-            for service in service_names:
-                service_principal.append(get_service_principal(
-                    service, self.emr_endpoint_url, self._session))
+            service_principal = [
+                get_service_principal(
+                    service, self.emr_endpoint_url, self._session
+                )
+                for service in service_names
+            ]
 
         LOG.debug(service_principal)
 

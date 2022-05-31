@@ -206,6 +206,6 @@ class TestLSCommand(BaseS3TransferCommandTest):
         arn = (
             'arn:aws:s3:us-west-2:123456789012:accesspoint/endpoint'
         )
-        self.run_cmd('s3 ls s3://%s' % arn, expected_rc=0)
+        self.run_cmd(f's3 ls s3://{arn}', expected_rc=0)
         call_args = self.operations_called[0][1]
         self.assertEqual(call_args['Bucket'], arn)

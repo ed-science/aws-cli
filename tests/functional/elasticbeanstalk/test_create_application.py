@@ -35,8 +35,7 @@ class TestUpdateConfigurationTemplate(BaseAWSCommandParamsTest):
         # python3, sys.argv is a list of unicode objects so this test
         # doesn't make sense for python3.
         cmdline = self.prefix
-        app_name = u'\u2713'
-        cmdline += u' --application-name %s' % app_name
+        cmdline += f" --application-name {'✓'}"
         encoding = getattr(sys.stdin, 'encoding')
         if encoding is None:
             encoding = 'utf-8'

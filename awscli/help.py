@@ -111,8 +111,7 @@ class PosixHelpRenderer(PagingHelpRenderer):
         cmdline = ['groff', '-m', 'man', '-T', 'ascii']
         LOG.debug("Running command: %s", cmdline)
         p3 = self._popen(cmdline, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        groff_output = p3.communicate(input=man_contents)[0]
-        return groff_output
+        return p3.communicate(input=man_contents)[0]
 
     def _send_output_to_pager(self, output):
         cmdline = self.get_pager_cmdline()
@@ -141,8 +140,10 @@ class PosixHelpRenderer(PagingHelpRenderer):
     def _exists_on_path(self, name):
         # Since we're only dealing with POSIX systems, we can
         # ignore things like PATHEXT.
-        return any([os.path.exists(os.path.join(p, name))
-                    for p in os.environ.get('PATH', '').split(os.pathsep)])
+        return any(
+            os.path.exists(os.path.join(p, name))
+            for p in os.environ.get('PATH', '').split(os.pathsep)
+        )
 
 
 class WindowsHelpRenderer(PagingHelpRenderer):
@@ -151,9 +152,7 @@ class WindowsHelpRenderer(PagingHelpRenderer):
     PAGER = 'more'
 
     def _convert_doc_content(self, contents):
-        text_output = publish_string(contents,
-                                     writer=TextWriter())
-        return text_output
+        return publish_string(contents, writer=TextWriter())
 
     def _popen(self, *args, **kwargs):
         # Also set the shell value to True.  To get any of the
@@ -310,10 +309,9 @@ class ProviderHelpCommand(HelpCommand):
         return self._subcommand_table
 
     def _create_subcommand_table(self):
-        subcommand_table = {}
         # Add the ``aws help topics`` command to the ``topic_table``
         topic_lister_command = TopicListerCommand(self.session)
-        subcommand_table['topics'] = topic_lister_command
+        subcommand_table = {'topics': topic_lister_command}
         topic_names = self._topic_tag_db.get_all_topic_names()
 
         # Add all of the possible topics to the ``topic_table``
@@ -398,7 +396,7 @@ class TopicHelpCommand(HelpCommand):
 
     @property
     def event_class(self):
-        return 'topics.' + self.name
+        return f'topics.{self.name}'
 
     @property
     def name(self):

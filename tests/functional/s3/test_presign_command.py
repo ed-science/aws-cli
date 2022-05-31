@@ -67,21 +67,17 @@ class TestPresignCommand(BaseAWSCommandParamsTest):
         self.assertEqual(query_params, expected_match['query_params'])
 
     def parse_query_string(self, query_string):
-        pairs = []
-        for part in query_string.split('&'):
-            pairs.append(part.split('=', 1))
+        pairs = [part.split('=', 1) for part in query_string.split('&')]
         return dict(pairs)
 
     def get_presigned_url_for_cmd(self, cmdline):
         with mock.patch('time.time', FROZEN_TIME):
             with mock.patch('datetime.datetime') as d:
                 d.utcnow = FROZEN_DATETIME
-                stdout = self.assert_params_for_cmd(cmdline, None)[0].strip()
-                return stdout
+                return self.assert_params_for_cmd(cmdline, None)[0].strip()
 
     def test_generates_a_url(self):
-        stdout = self.get_presigned_url_for_cmd(
-            self.prefix + 's3://bucket/key')
+        stdout = self.get_presigned_url_for_cmd(f'{self.prefix}s3://bucket/key')
 
         self.assert_presigned_url_matches(
             stdout, {
@@ -96,8 +92,7 @@ class TestPresignCommand(BaseAWSCommandParamsTest):
         )
 
     def test_handles_non_dns_compatible_buckets(self):
-        stdout = self.get_presigned_url_for_cmd(
-            self.prefix + 's3://bucket.dots/key')
+        stdout = self.get_presigned_url_for_cmd(f'{self.prefix}s3://bucket.dots/key')
 
         self.assert_presigned_url_matches(
             stdout, {
@@ -114,7 +109,9 @@ class TestPresignCommand(BaseAWSCommandParamsTest):
     def test_handles_expires_in(self):
         expires_in = 1000
         stdout = self.get_presigned_url_for_cmd(
-            self.prefix + 's3://bucket/key --expires-in %s' % expires_in)
+            self.prefix + f's3://bucket/key --expires-in {expires_in}'
+        )
+
 
         self.assert_presigned_url_matches(
             stdout, {
@@ -131,8 +128,7 @@ class TestPresignCommand(BaseAWSCommandParamsTest):
     def test_handles_sigv4(self):
         with temporary_file('w') as f:
             self.enable_sigv4_from_config_file(f)
-            stdout = self.get_presigned_url_for_cmd(
-                self.prefix + 's3://bucket/key')
+            stdout = self.get_presigned_url_for_cmd(f'{self.prefix}s3://bucket/key')
 
         expected = {
             'hostname': 'bucket.s3.amazonaws.com',
@@ -154,8 +150,7 @@ class TestPresignCommand(BaseAWSCommandParamsTest):
 
     def test_s3_prefix_not_needed(self):
         # Consistent with the 'ls' command.
-        stdout = self.get_presigned_url_for_cmd(
-            self.prefix + 'bucket/key')
+        stdout = self.get_presigned_url_for_cmd(f'{self.prefix}bucket/key')
 
         self.assert_presigned_url_matches(
             stdout, {
@@ -172,8 +167,7 @@ class TestPresignCommand(BaseAWSCommandParamsTest):
     def test_can_support_addressing_mode_config(self):
         with temporary_file('w') as f:
             self.enable_addressing_mode_in_config(f, 'path')
-            stdout = self.get_presigned_url_for_cmd(
-                self.prefix + 's3://bucket/key')
+            stdout = self.get_presigned_url_for_cmd(f'{self.prefix}s3://bucket/key')
         self.assert_presigned_url_matches(
             stdout, {
                 'hostname': 's3.amazonaws.com',

@@ -70,26 +70,21 @@ def validate_scp_with_key_file(key_file):
 
 def check_scp_key_format(key_file):
     # If only pscp is present and the file format is incorrect
-    if (emrutils.which('pscp.exe') is not None and
-            (emrutils.which('scp.exe') or emrutils.which('scp')) is None):
-        if check_command_key_format(key_file, ['ppk']) is False:
-            raise exceptions.WrongPuttyKeyError
-    else:
-        pass
+    if (
+        emrutils.which('pscp.exe') is not None
+        and (emrutils.which('scp.exe') or emrutils.which('scp')) is None
+    ) and check_command_key_format(key_file, ['ppk']) is False:
+        raise exceptions.WrongPuttyKeyError
 
 
 def check_ssh_key_format(key_file):
     # If only putty is present and the file format is incorrect
-    if (emrutils.which('putty.exe') is not None and
-            (emrutils.which('ssh.exe') or emrutils.which('ssh')) is None):
-        if check_command_key_format(key_file, ['ppk']) is False:
-            raise exceptions.WrongPuttyKeyError
-    else:
-        pass
+    if (
+        emrutils.which('putty.exe') is not None
+        and (emrutils.which('ssh.exe') or emrutils.which('ssh')) is None
+    ) and check_command_key_format(key_file, ['ppk']) is False:
+        raise exceptions.WrongPuttyKeyError
 
 
 def check_command_key_format(key_file, accepted_file_format=[]):
-    if any(key_file.endswith(i) for i in accepted_file_format):
-        return True
-    else:
-        return False
+    return any((key_file.endswith(i) for i in accepted_file_format))

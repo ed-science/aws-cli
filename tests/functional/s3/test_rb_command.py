@@ -18,20 +18,20 @@ class TestRb(BaseAWSCommandParamsTest):
     prefix = 's3 rb '
 
     def test_rb(self):
-        command = self.prefix + 's3://bucket'
+        command = f'{self.prefix}s3://bucket'
         self.run_cmd(command)
         self.assertEqual(len(self.operations_called), 1)
         self.assertEqual(self.operations_called[0][0].name, 'DeleteBucket')
 
     def test_rb_force_empty_bucket(self):
-        command = self.prefix + 's3://bucket --force'
+        command = f'{self.prefix}s3://bucket --force'
         self.run_cmd(command)
         self.assertEqual(len(self.operations_called), 2)
         self.assertEqual(self.operations_called[0][0].name, 'ListObjectsV2')
         self.assertEqual(self.operations_called[1][0].name, 'DeleteBucket')
 
     def test_rb_force_non_empty_bucket(self):
-        command = self.prefix + 's3://bucket --force'
+        command = f'{self.prefix}s3://bucket --force'
         self.parsed_responses = [{
             'Contents': [
                 {
@@ -48,13 +48,13 @@ class TestRb(BaseAWSCommandParamsTest):
         self.assertEqual(self.operations_called[2][0].name, 'DeleteBucket')
 
     def test_rb_failed_rc(self):
-        command = self.prefix + 's3://bucket'
+        command = f'{self.prefix}s3://bucket'
         self.http_response.status_code = 500
         _, stderr, _ = self.run_cmd(command, expected_rc=1)
         self.assertIn('remove_bucket failed:', stderr)
 
     def test_rb_force_with_failed_rm(self):
-        command = self.prefix + 's3://bucket --force'
+        command = f'{self.prefix}s3://bucket --force'
         self.http_response.status_code = 500
         _, stderr, _ = self.run_cmd(command, expected_rc=255)
         self.assertIn('remove_bucket failed:', stderr)
@@ -62,12 +62,12 @@ class TestRb(BaseAWSCommandParamsTest):
         self.assertEqual(self.operations_called[0][0].name, 'ListObjectsV2')
 
     def test_nonzero_exit_if_uri_scheme_not_provided(self):
-        command = self.prefix + 'bucket'
+        command = f'{self.prefix}bucket'
         self.run_cmd(command, expected_rc=255)
 
     def test_nonzero_exit_if_key_provided(self):
-        command = self.prefix + 's3://bucket/key --force'
+        command = f'{self.prefix}s3://bucket/key --force'
         self.run_cmd(command, expected_rc=255)
 
-        command = self.prefix + 's3://bucket/key'
+        command = f'{self.prefix}s3://bucket/key'
         self.run_cmd(command, expected_rc=255)

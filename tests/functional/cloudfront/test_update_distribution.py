@@ -20,7 +20,7 @@ class TestUpdateDistribution(BaseAWSCommandParamsTest):
     prefix = 'cloudfront update-distribution --id myid '
 
     def test_default_root_object(self):
-        cmdline = self.prefix + '--default-root-object index.html'
+        cmdline = f'{self.prefix}--default-root-object index.html'
         self.parsed_response = {
             # A get-distribution-config response, contains a minimal config
             'ETag': '__etag__',

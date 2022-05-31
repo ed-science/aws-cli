@@ -21,10 +21,12 @@ class TestRunInstances(BaseAWSCommandParamsTest):
     prefix = 'ec2 run-instances'
 
     def assert_run_instances_call(self, args, result):
-        if not isinstance(args, list):
-            args_list = (self.prefix + args).split()
-        else:
-            args_list = self.prefix.split() + args
+        args_list = (
+            self.prefix.split() + args
+            if isinstance(args, list)
+            else (self.prefix + args).split()
+        )
+
         self.assert_params_for_cmd(
             args_list, result, ignore_params=['ClientToken'])
 
@@ -52,7 +54,7 @@ class TestRunInstances(BaseAWSCommandParamsTest):
             with compat_open(tmp.name, 'w') as f:
                 f.write(data)
                 f.flush()
-                args = ' --image-id foo --user-data file://%s' % f.name
+                args = f' --image-id foo --user-data file://{f.name}'
                 result = {'ImageId': 'foo',
                           'MaxCount': 1,
                           'MinCount': 1,
@@ -71,25 +73,25 @@ class TestRunInstances(BaseAWSCommandParamsTest):
 
     def test_count_in_json_only(self):
         input_json = '{"ImageId":"ami-xxxx","MaxCount":9,"MinCount":5}'
-        args = ' --cli-input-json ' + input_json
+        args = f' --cli-input-json {input_json}'
         result = {'ImageId': 'ami-xxxx', 'MaxCount': 9, 'MinCount': 5}
         self.assert_run_instances_call(args, result)
 
     def test_count_in_cli_and_in_json(self):
         input_json = '{"ImageId":"ami-xxxx","MaxCount":9,"MinCount":5}'
-        args = ' --count 3 --cli-input-json ' + input_json
+        args = f' --count 3 --cli-input-json {input_json}'
         result = {'ImageId': 'ami-xxxx', 'MaxCount': 3, 'MinCount': 3}
         self.assert_run_instances_call(args, result)
 
     def test_block_device_mapping(self):
         args_list = ' --image-id ami-foobar --count 1'.split()
-        # We're switching to list form because we need to test
-        # when there's leading spaces.  This is the CLI equivalent
-        # of --block-dev-mapping ' [{"device_name" ...'
-        # (note the space between ``'`` and ``[``)
-        args_list.append('--block-device-mapping')
-        args_list.append(
-            ' [{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":20}}]')
+        args_list.extend(
+            (
+                '--block-device-mapping',
+                ' [{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":20}}]',
+            )
+        )
+
         result = {
             'BlockDeviceMappings': [
                 {'DeviceName': '/dev/sda1',
@@ -102,8 +104,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args_list, result)
 
     def test_secondary_ip_address(self):
-        args = ' --image-id ami-foobar --count 1 '
-        args += '--secondary-private-ip-addresses 10.0.2.106'
+        args = (
+            ' --image-id ami-foobar --count 1 '
+            + '--secondary-private-ip-addresses 10.0.2.106'
+        )
+
         args_list = (self.prefix + args).split()
         result = {
             'ImageId': 'ami-foobar',
@@ -116,8 +121,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_secondary_ip_address_with_subnet(self):
-        args = ' --image-id ami-foobar --count 1 --subnet subnet-12345678 '
-        args += '--secondary-private-ip-addresses 10.0.2.106'
+        args = (
+            ' --image-id ami-foobar --count 1 --subnet subnet-12345678 '
+            + '--secondary-private-ip-addresses 10.0.2.106'
+        )
+
         result = {
             'ImageId': 'ami-foobar',
             'NetworkInterfaces': [
@@ -130,8 +138,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_secondary_ip_addresses(self):
-        args = ' --image-id ami-foobar --count 1 '
-        args += '--secondary-private-ip-addresses 10.0.2.106 10.0.2.107'
+        args = (
+            ' --image-id ami-foobar --count 1 '
+            + '--secondary-private-ip-addresses 10.0.2.106 10.0.2.107'
+        )
+
         result = {
             'ImageId': 'ami-foobar',
             'NetworkInterfaces': [
@@ -144,8 +155,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_secondary_ip_address_count(self):
-        args = ' --image-id ami-foobar --count 1 '
-        args += '--secondary-private-ip-address-count 4'
+        args = (
+            ' --image-id ami-foobar --count 1 '
+            + '--secondary-private-ip-address-count 4'
+        )
+
         result = {
             'NetworkInterfaces': [{'DeviceIndex': 0,
                                    'SecondaryPrivateIpAddressCount': 4}],
@@ -156,8 +170,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_secondary_ip_address_count_with_subnet(self):
-        args = ' --image-id ami-foobar --count 1 --subnet subnet-12345678 '
-        args += '--secondary-private-ip-address-count 4'
+        args = (
+            ' --image-id ami-foobar --count 1 --subnet subnet-12345678 '
+            + '--secondary-private-ip-address-count 4'
+        )
+
         result = {
             'NetworkInterfaces': [{'DeviceIndex': 0,
                                    'SubnetId': 'subnet-12345678',
@@ -169,8 +186,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_associate_public_ip_address(self):
-        args = ' --image-id ami-foobar --count 1 --subnet-id subnet-12345678 '
-        args += '--associate-public-ip-address'
+        args = (
+            ' --image-id ami-foobar --count 1 --subnet-id subnet-12345678 '
+            + '--associate-public-ip-address'
+        )
+
         result = {
             'NetworkInterfaces': [
                 {'DeviceIndex': 0,
@@ -184,8 +204,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_associate_public_ip_address_switch_order(self):
-        args = ' --image-id ami-foobar --count 1 '
-        args += '--associate-public-ip-address --subnet-id subnet-12345678'
+        args = (
+            ' --image-id ami-foobar --count 1 '
+            + '--associate-public-ip-address --subnet-id subnet-12345678'
+        )
+
         result = {
             'NetworkInterfaces': [
                 {'DeviceIndex': 0,
@@ -199,8 +222,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_no_associate_public_ip_address(self):
-        args = ' --image-id ami-foobar --count 1  --subnet-id subnet-12345678 '
-        args += '--no-associate-public-ip-address'
+        args = (
+            ' --image-id ami-foobar --count 1  --subnet-id subnet-12345678 '
+            + '--no-associate-public-ip-address'
+        )
+
         result = {
             'ImageId': 'ami-foobar',
             'NetworkInterfaces': [{'AssociatePublicIpAddress': False,
@@ -221,8 +247,7 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_associate_public_ip_address_and_group_id(self):
-        args = ' --image-id ami-foobar --count 1 '
-        args += '--security-group-id sg-12345678 '
+        args = ' --image-id ami-foobar --count 1 ' + '--security-group-id sg-12345678 '
         args += '--associate-public-ip-address --subnet-id subnet-12345678'
         result = {
             'NetworkInterfaces': [
@@ -238,8 +263,7 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_group_id_alone(self):
-        args = ' --image-id ami-foobar --count 1 '
-        args += '--security-group-id sg-12345678'
+        args = ' --image-id ami-foobar --count 1 ' + '--security-group-id sg-12345678'
         result = {
             'SecurityGroupIds': ['sg-12345678'],
             'ImageId': 'ami-foobar',
@@ -249,8 +273,7 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_associate_public_ip_address_and_private_ip_address(self):
-        args = ' --image-id ami-foobar --count 1 '
-        args += '--private-ip-address 10.0.0.200 '
+        args = ' --image-id ami-foobar --count 1 ' + '--private-ip-address 10.0.0.200 '
         args += '--associate-public-ip-address --subnet-id subnet-12345678'
         result = {
             'NetworkInterfaces': [{
@@ -268,8 +291,7 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_private_ip_address_alone(self):
-        args = ' --image-id ami-foobar --count 1 '
-        args += '--private-ip-address 10.0.0.200'
+        args = ' --image-id ami-foobar --count 1 ' + '--private-ip-address 10.0.0.200'
         result = {
             'PrivateIpAddress': '10.0.0.200',
             'ImageId': 'ami-foobar',
@@ -279,8 +301,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, result)
 
     def test_ipv6_address_count_and_associate_public_ip_address(self):
-        args = ' --associate-public-ip-address'
-        args += ' --ipv6-address-count 5 --image-id ami-foobar --count 1'
+        args = (
+            ' --associate-public-ip-address'
+            + ' --ipv6-address-count 5 --image-id ami-foobar --count 1'
+        )
+
         expected = {
             'NetworkInterfaces': [{
                 'DeviceIndex': 0,
@@ -294,8 +319,11 @@ class TestRunInstances(BaseAWSCommandParamsTest):
         self.assert_run_instances_call(args, expected)
 
     def test_ipv6_addresses_and_associate_public_ip_address(self):
-        args = ' --associate-public-ip-address --count 1'
-        args += ' --ipv6-addresses Ipv6Address=::1 --image-id ami-foobar '
+        args = (
+            ' --associate-public-ip-address --count 1'
+            + ' --ipv6-addresses Ipv6Address=::1 --image-id ami-foobar '
+        )
+
         expected = {
             'NetworkInterfaces': [{
                 'DeviceIndex': 0,

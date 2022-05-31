@@ -71,8 +71,6 @@ class RecordingGroupArgument(CLIArgument):
         if value is None:
             return
         unpacked = self._unpack_argument(value)
-        if 'ConfigurationRecorder' in parameters:
-            parameters['ConfigurationRecorder']['recordingGroup'] = unpacked
-        else:
+        if 'ConfigurationRecorder' not in parameters:
             parameters['ConfigurationRecorder'] = {}
-            parameters['ConfigurationRecorder']['recordingGroup'] = unpacked
+        parameters['ConfigurationRecorder']['recordingGroup'] = unpacked

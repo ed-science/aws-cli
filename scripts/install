@@ -93,12 +93,7 @@ def bin_path():
     Get the system's binary path, either `bin` on reasonable
     systems or `Scripts` on Windows.
     """
-    path = 'bin'
-
-    if platform.system() == 'Windows':
-        path = 'Scripts'
-
-    return path
+    return 'Scripts' if platform.system() == 'Windows' else 'bin'
 
 
 def create_install_structure(working_dir, install_dir):
@@ -111,7 +106,7 @@ def _create_virtualenv_internal(location, working_dir):
     # On py3 we use the built in venv to create our virtualenv.
     # There's a bug with sys.executable on external virtualenv
     # that causes installation failures.
-    run('%s -m venv %s' % (sys.executable, location))
+    run(f'{sys.executable} -m venv {location}')
 
 
 def _create_virtualenv_external(location, working_dir):
@@ -143,8 +138,7 @@ def _get_venv_package_tarball(package_dir):
 
 
 def create_working_dir():
-    d = tempfile.mkdtemp()
-    return d
+    return tempfile.mkdtemp()
 
 
 def pip_install_packages(install_dir):
@@ -164,8 +158,9 @@ def pip_install_packages(install_dir):
         _install_setup_deps(pip_script, '.')
 
     with cd(PACKAGES_DIR):
-        run('%s install %s --find-links file://%s %s' % (
-                pip_script, INSTALL_ARGS, PACKAGES_DIR, cli_tarball))
+        run(
+            f'{pip_script} install {INSTALL_ARGS} --find-links file://{PACKAGES_DIR} {cli_tarball}'
+        )
 
 
 def _install_setup_deps(pip_script, setup_package_dir):
@@ -188,7 +183,7 @@ def _install_setup_deps(pip_script, setup_package_dir):
 
 def create_symlink(real_location, symlink_name):
     if os.path.isfile(symlink_name):
-        print("Symlink already exists: %s" % symlink_name)
+        print(f"Symlink already exists: {symlink_name}")
         print("Removing symlink.")
         os.remove(symlink_name)
     symlink_dir_name = os.path.dirname(symlink_name)
@@ -246,9 +241,9 @@ def main():
         real_location = os.path.join(opts.install_dir, bin_path(), 'aws')
         if opts.bin_location and create_symlink(real_location,
                                                 opts.bin_location):
-            print("You can now run: %s --version" % opts.bin_location)
+            print(f"You can now run: {opts.bin_location} --version")
         else:
-            print("You can now run: %s --version" % real_location)
+            print(f"You can now run: {real_location} --version")
         print('\nNote: AWS CLI version 2, the latest major version '
               'of the AWS CLI, is now stable and recommended for general '
               'use. For more information, see the AWS CLI version 2 '

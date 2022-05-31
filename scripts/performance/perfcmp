@@ -28,8 +28,7 @@ class RunComparison(object):
         self.new_summary = new_summary
 
     def iter_field_names(self):
-        for field in self.TIME_FIELDS + self.MEMORY_FIELDS + self.OTHER_FIELDS:
-            yield field
+        yield from self.TIME_FIELDS + self.MEMORY_FIELDS + self.OTHER_FIELDS
 
     def old(self, field):
         value = self.old_summary[field]
@@ -53,7 +52,7 @@ class RunComparison(object):
             return self._human_readable_size(value)[1]
 
     def old_stddev(self, field):
-        real_field = 'std_dev_%s' % field
+        real_field = f'std_dev_{field}'
         return self.old(real_field)
 
     def new(self, field):
@@ -61,7 +60,7 @@ class RunComparison(object):
         return self._format(field, value)
 
     def new_stddev(self, field):
-        real_field = 'std_dev_%s' % field
+        real_field = f'std_dev_{field}'
         return self.new(real_field)
 
     def _format(self, field, value):
@@ -90,10 +89,10 @@ class RunComparison(object):
                 return ['%.2f' % (base * bytes_int / unit), suffix]
 
     def diff_percent(self, field):
-        diff_percent = (
-            (self.new_summary[field] - self.old_summary[field]) /
-            float(self.old_summary[field])) * 100
-        return diff_percent
+        return (
+            (self.new_summary[field] - self.old_summary[field])
+            / float(self.old_summary[field])
+        ) * 100
 
 
 def compare_runs(old_dir, new_dir):
@@ -105,16 +104,17 @@ def compare_runs(old_dir, new_dir):
         old_summary = get_summary(old_run_dir)
         new_summary = get_summary(new_run_dir)
         comp = RunComparison(old_summary, new_summary)
-        header = [Style.BRIGHT + dirname + Style.RESET_ALL,
-                  Style.BRIGHT + 'old' + Style.RESET_ALL,
-                  # Numeric suffix (MiB, GiB, sec).
-                  '',
-                  'std_dev',
-                  Style.BRIGHT + 'new' + Style.RESET_ALL,
-                  # Numeric suffix (MiB, GiB, sec).
-                  '',
-                  'std_dev',
-                  Style.BRIGHT + 'delta' + Style.RESET_ALL]
+        header = [
+            Style.BRIGHT + dirname + Style.RESET_ALL,
+            f'{Style.BRIGHT}old{Style.RESET_ALL}',
+            '',
+            'std_dev',
+            f'{Style.BRIGHT}new{Style.RESET_ALL}',
+            '',
+            'std_dev',
+            f'{Style.BRIGHT}delta{Style.RESET_ALL}',
+        ]
+
         rows = []
         for field in comp.iter_field_names():
             row = [field, comp.old(field), comp.old_suffix(field),

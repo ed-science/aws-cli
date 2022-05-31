@@ -69,11 +69,14 @@ class ECRLogin(BasicCommand):
     def _run_main(self, parsed_args, parsed_globals):
         ecr_client = create_client_from_parsed_globals(
             self._session, 'ecr', parsed_globals)
-        if not parsed_args.registry_ids:
-            result = ecr_client.get_authorization_token()
-        else:
-            result = ecr_client.get_authorization_token(
-                registryIds=parsed_args.registry_ids)
+        result = (
+            ecr_client.get_authorization_token(
+                registryIds=parsed_args.registry_ids
+            )
+            if parsed_args.registry_ids
+            else ecr_client.get_authorization_token()
+        )
+
         for auth in result['authorizationData']:
             auth_token = b64decode(auth['authorizationToken']).decode()
             username, password = auth_token.split(':')

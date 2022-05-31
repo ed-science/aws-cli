@@ -41,8 +41,11 @@ class TestGenerateCliSkeletonOutput(BaseAWSCommandParamsTest):
             skeleton_output['Regions'][0]['Endpoint'], 'Endpoint')
 
     def test_can_pass_in_input_parameters(self):
-        cmdline = 'ec2 describe-regions --generate-cli-skeleton output '
-        cmdline += ' --region-names us-east-1'
+        cmdline = (
+            'ec2 describe-regions --generate-cli-skeleton output '
+            + ' --region-names us-east-1'
+        )
+
         stdout, _, _ = self.assert_params_for_cmd(
             cmdline, {'RegionNames': ['us-east-1']})
 
@@ -55,8 +58,11 @@ class TestGenerateCliSkeletonOutput(BaseAWSCommandParamsTest):
             skeleton_output['Regions'][0]['Endpoint'], 'Endpoint')
 
     def test_when_no_output_shape(self):
-        cmdline = 'ec2 attach-internet-gateway '
-        cmdline += '--internet-gateway-id igw-c0a643a9 --vpc-id vpc-a01106 '
+        cmdline = (
+            'ec2 attach-internet-gateway '
+            + '--internet-gateway-id igw-c0a643a9 --vpc-id vpc-a01106 '
+        )
+
         cmdline += '--generate-cli-skeleton output'
         stdout, _, _ = self.assert_params_for_cmd(
             cmdline,
@@ -81,8 +87,11 @@ class TestGenerateCliSkeletonOutput(BaseAWSCommandParamsTest):
         self.assertEqual(skeleton_output['TableNames'], ['TableName'])
 
     def test_respects_formatting(self):
-        cmdline = 'ec2 describe-regions --generate-cli-skeleton output '
-        cmdline += ' --query Regions[].RegionName --output text'
+        cmdline = (
+            'ec2 describe-regions --generate-cli-skeleton output '
+            + ' --query Regions[].RegionName --output text'
+        )
+
         stdout, _, _ = self.run_cmd(cmdline)
         self.assertEqual(stdout, 'RegionName\n')
 
@@ -94,10 +103,11 @@ class TestGenerateCliSkeletonOutput(BaseAWSCommandParamsTest):
         self.assertEqual('', stdout)
 
     def test_validates_at_client_level(self):
-        cmdline = 'ec2 describe-instances --generate-cli-skeleton output '
-        # Note: The for --filters instead of Value the key should be Values
-        # which should throw a validation error.
-        cmdline += '--filters Name=instance-id,Value=foo'
+        cmdline = (
+            'ec2 describe-instances --generate-cli-skeleton output '
+            + '--filters Name=instance-id,Value=foo'
+        )
+
         stdout, stderr, _ = self.run_cmd(cmdline, expected_rc=255)
         self.assertIn('Unknown parameter in Filters[0]', stderr)
         self.assertEqual('', stdout)

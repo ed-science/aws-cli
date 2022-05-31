@@ -20,7 +20,7 @@ class TestCreateDistribution(BaseAWSCommandParamsTest):
     prefix = 'cloudfront create-distribution '
 
     def test_origin_domain_name_with_custom_domain(self):
-        cmdline = self.prefix + '--origin-domain-name foo.com'
+        cmdline = f'{self.prefix}--origin-domain-name foo.com'
         result = {
             'DistributionConfig': {
                 'Origins': {
@@ -42,7 +42,7 @@ class TestCreateDistribution(BaseAWSCommandParamsTest):
         self.assertEqual(self.last_kwargs, result)
 
     def test_origin_domain_name_with_s3_domain(self):
-        cmdline = self.prefix + '--origin-domain-name foo.s3.amazonaws.com'
+        cmdline = f'{self.prefix}--origin-domain-name foo.s3.amazonaws.com'
         result = {
             'DistributionConfig': {
                 'Origins': {
@@ -64,8 +64,11 @@ class TestCreateDistribution(BaseAWSCommandParamsTest):
         self.assertEqual(self.last_kwargs, result)
 
     def test_s3_domain_with_default_root_object(self):
-        cmdline = (self.prefix + '--origin-domain-name foo.s3.amazonaws.com '
-                   + '--default-root-object index.html')
+        cmdline = (
+            f'{self.prefix}--origin-domain-name foo.s3.amazonaws.com '
+            + '--default-root-object index.html'
+        )
+
         result = {
             'DistributionConfig': {
                 'Origins': {

@@ -346,28 +346,27 @@ class CodeDeployValidator():
         if (not hasattr(self, 'deployment_group_details') or
                 self.deployment_group_details is None):
             return None
-        else:
-            dgp_info = self.deployment_group_details['deploymentGroupInfo']
-            blue_green_info = dgp_info['blueGreenDeploymentConfiguration']
+        dgp_info = self.deployment_group_details['deploymentGroupInfo']
+        blue_green_info = dgp_info['blueGreenDeploymentConfiguration']
 
-            deploy_ready_wait_min = \
-                blue_green_info['deploymentReadyOption']['waitTimeInMinutes']
+        deploy_ready_wait_min = \
+            blue_green_info['deploymentReadyOption']['waitTimeInMinutes']
 
-            terminate_key = 'terminateBlueInstancesOnDeploymentSuccess'
-            termination_wait_min = \
-                blue_green_info[terminate_key]['terminationWaitTimeInMinutes']
+        terminate_key = 'terminateBlueInstancesOnDeploymentSuccess'
+        termination_wait_min = \
+            blue_green_info[terminate_key]['terminationWaitTimeInMinutes']
 
-            configured_wait = deploy_ready_wait_min + termination_wait_min
+        configured_wait = deploy_ready_wait_min + termination_wait_min
 
-            return configured_wait + TIMEOUT_BUFFER_MIN
+        return configured_wait + TIMEOUT_BUFFER_MIN
 
     def validate_all(self):
         self.validate_application()
         self.validate_deployment_group()
 
     def validate_application(self):
-        app_name = self._resource_names['app_name']
         if self.app_details['application']['computePlatform'] != 'ECS':
+            app_name = self._resource_names['app_name']
             raise exceptions.InvalidPlatformError(
                 resource='Application', name=app_name)
 
@@ -391,12 +390,12 @@ class CodeDeployValidator():
         # either ECS resource names or ARNs can be stored, so check both
         for target in target_services:
             target_serv = target['serviceName']
-            if target_serv != service and target_serv != service_arn:
+            if target_serv not in [service, service_arn]:
                 raise exceptions.InvalidProperyError(
                     dg_name=dgp, resource='service', resource_name=service)
 
             target_cluster = target['clusterName']
-            if target_cluster != cluster and target_cluster != cluster_arn:
+            if target_cluster not in [cluster, cluster_arn]:
                 raise exceptions.InvalidProperyError(
                     dg_name=dgp, resource='cluster', resource_name=cluster)
 
@@ -416,7 +415,7 @@ class ECSClient():
     def get_service_details(self):
         cluster = self._args.cluster
 
-        if cluster is None or '':
+        if cluster is None:
             cluster = 'default'
 
         try:

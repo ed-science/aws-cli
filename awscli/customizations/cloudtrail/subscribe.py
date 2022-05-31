@@ -171,8 +171,9 @@ class CloudTrailSubscribe(BasicCommand):
     def _get_policy(self, key_name):
         try:
             data = self.s3.get_object(
-                Bucket='awscloudtrail-policy-' + self.region_name,
-                Key=key_name)
+                Bucket=f'awscloudtrail-policy-{self.region_name}', Key=key_name
+            )
+
             return data['Body'].read().decode('utf-8')
         except Exception as e:
             raise CloudTrailError(
@@ -208,8 +209,7 @@ class CloudTrailSubscribe(BasicCommand):
             policy = policy.replace('<Prefix>', prefix or '')
 
         LOG.debug('Bucket policy:\n{0}'.format(policy))
-        bucket_exists = s3_bucket_exists(self.s3, bucket)
-        if bucket_exists:
+        if bucket_exists := s3_bucket_exists(self.s3, bucket):
             raise Exception('Bucket {bucket} already exists.'.format(
                 bucket=bucket))
 

@@ -71,8 +71,9 @@ def mark_as_preview(command_table, session, **kwargs):
         # We also want to register a handler that will update the
         # description in the docs to say that this is a preview service.
         session.get_component('event_emitter').register_last(
-            'doc-description.%s' % preview_service,
-            update_description_with_preview)
+            f'doc-description.{preview_service}',
+            update_description_with_preview,
+        )
 
 
 def update_description_with_preview(help_command, **kwargs):
@@ -94,20 +95,17 @@ def update_description_with_preview(help_command, **kwargs):
     # The service name will always be the first element in the
     # event class for the help object
     service_name = help_command.event_class.split('.')[0]
-    style.code("aws configure set preview.%s true" % service_name)
+    style.code(f"aws configure set preview.{service_name} true")
     style.end_note()
 
 
 def _get_allowed_services(session):
-    # For a service to be marked as preview, it must be in the
-    # [preview] section and it must have a value of 'true'
-    # (case insensitive).
-    allowed = []
     preview_services = session.full_config.get('preview', {})
-    for preview, value in preview_services.items():
-        if value == 'true':
-            allowed.append(preview)
-    return allowed
+    return [
+        preview
+        for preview, value in preview_services.items()
+        if value == 'true'
+    ]
 
 
 class PreviewModeCommandMixin(object):

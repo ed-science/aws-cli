@@ -31,10 +31,12 @@ class AddInstanceGroups(Command):
     ]
 
     def _run_main_command(self, parsed_args, parsed_globals):
-        parameters = {'JobFlowId': parsed_args.cluster_id}
-        parameters['InstanceGroups'] = \
-            instancegroupsutils.build_instance_groups(
-            parsed_args.instance_groups)
+        parameters = {
+            'JobFlowId': parsed_args.cluster_id,
+            'InstanceGroups': instancegroupsutils.build_instance_groups(
+                parsed_args.instance_groups
+            ),
+        }
 
         add_instance_groups_response = emrutils.call(
             self._session, 'add_instance_groups', parameters,

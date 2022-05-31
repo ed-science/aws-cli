@@ -107,7 +107,7 @@ class CodeCommitGetCommand(BasicCommand):
     def write_git_parameters(self, signature):
         username = self._session.get_credentials().access_key
         if self._session.get_credentials().token is not None:
-            username += "%" + self._session.get_credentials().token
+            username += f"%{self._session.get_credentials().token}"
         # Python will add a \r to the line ending for a text stdout in Windows.
         # Git does not like the \r, so switch to binary
         with NonTranslatedStdout() as binary_stdout:
@@ -122,23 +122,21 @@ class CodeCommitGetCommand(BasicCommand):
     def read_git_parameters(self):
         parsed = {}
         for line in sys.stdin:
-            line = line.strip()
-            if line:
+            if line := line.strip():
                 key, value = line.split('=', 1)
                 parsed[key] = value
         return parsed
 
     def extract_url(self, parameters):
-        url = '{0}://{1}/{2}'.format(parameters['protocol'],
-                                     parameters['host'],
-                                     parameters['path'])
-        return url
+        return '{0}://{1}/{2}'.format(
+            parameters['protocol'], parameters['host'], parameters['path']
+        )
 
     def extract_region(self, parameters, parsed_globals):
         match = re.match(r'(vpce-.+\.)?git-codecommit(-fips)?\.([^.]+)\.(vpce\.)?amazonaws\.com',
                          parameters['host'])
         if match is not None:
-            return match.group(3)
+            return match[3]
         elif parsed_globals.region is not None:
             return parsed_globals.region
         else:

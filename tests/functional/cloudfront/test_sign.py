@@ -65,8 +65,10 @@ class TestSign(BaseAWSCommandParamsTest):
 
     def test_canned_policy(self):
         cmdline = (
-            self.prefix + '--private-key file://' + self.private_key_file +
-            ' --date-less-than 2016-1-1')
+            f'{self.prefix}--private-key file://{self.private_key_file}'
+            + ' --date-less-than 2016-1-1'
+        )
+
         expected_params = {
             'Key-Pair-Id': ['my_id'],
             'Expires': ['1451606400'], 'Signature': [mock.ANY]}
@@ -75,8 +77,10 @@ class TestSign(BaseAWSCommandParamsTest):
 
     def test_custom_policy(self):
         cmdline = (
-            self.prefix + '--private-key file://' + self.private_key_file +
-            ' --date-less-than 2016-1-1 --ip-address 12.34.56.78')
+            f'{self.prefix}--private-key file://{self.private_key_file}'
+            + ' --date-less-than 2016-1-1 --ip-address 12.34.56.78'
+        )
+
         expected_params = {
             'Key-Pair-Id': ['my_id'],
             'Policy': [mock.ANY], 'Signature': [mock.ANY]}

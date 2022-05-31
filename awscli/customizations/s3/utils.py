@@ -106,18 +106,14 @@ def human_readable_to_bytes(value):
 
     """
     value = value.lower()
-    if value[-2:] == 'ib':
-        # Assume IEC suffix.
-        suffix = value[-3:].lower()
-    else:
-        suffix = value[-2:].lower()
+    suffix = value[-3:].lower() if value[-2:] == 'ib' else value[-2:].lower()
     has_size_identifier = (
         len(value) >= 2 and suffix in SIZE_SUFFIX)
     if not has_size_identifier:
         try:
             return int(value)
         except ValueError:
-            raise ValueError("Invalid size value: %s" % value)
+            raise ValueError(f"Invalid size value: {value}")
     else:
         multiplier = SIZE_SUFFIX[suffix]
         return int(value[:-len(suffix)]) * multiplier
@@ -173,14 +169,11 @@ class StablePriorityQueue(queue.Queue):
     """
     def __init__(self, maxsize=0, max_priority=20):
         queue.Queue.__init__(self, maxsize=maxsize)
-        self.priorities = [deque([]) for i in range(max_priority + 1)]
+        self.priorities = [deque([]) for _ in range(max_priority + 1)]
         self.default_priority = max_priority
 
     def _qsize(self):
-        size = 0
-        for bucket in self.priorities:
-            size += len(bucket)
-        return size
+        return sum(len(bucket) for bucket in self.priorities)
 
     def _put(self, item):
         priority = min(getattr(item, 'PRIORITY', self.default_priority),
@@ -221,17 +214,13 @@ def find_bucket_key(s3_path):
     It will return the bucket and the key represented by the s3 path
     """
     block_unsupported_resources(s3_path)
-    match = _S3_ACCESSPOINT_TO_BUCKET_KEY_REGEX.match(s3_path)
-    if match:
+    if match := _S3_ACCESSPOINT_TO_BUCKET_KEY_REGEX.match(s3_path):
         return match.group('bucket'), match.group('key')
-    match = _S3_OUTPOST_TO_BUCKET_KEY_REGEX.match(s3_path)
-    if match:
+    if match := _S3_OUTPOST_TO_BUCKET_KEY_REGEX.match(s3_path):
         return match.group('bucket'), match.group('key')
     s3_components = s3_path.split('/', 1)
     bucket = s3_components[0]
-    s3_key = ''
-    if len(s3_components) > 1:
-        s3_key = s3_components[1]
+    s3_key = s3_components[1] if len(s3_components) > 1 else ''
     return bucket, s3_key
 
 
@@ -292,12 +281,10 @@ def find_dest_path_comp_key(files, src_path=None):
     else:
         rel_path = src_path.split(sep_table[src_type])[-1]
     compare_key = rel_path.replace(sep_table[src_type], '/')
+    dest_path = dest['path']
     if files['use_src_name']:
-        dest_path = dest['path']
         dest_path += rel_path.replace(sep_table[src_type],
                                       sep_table[dest_type])
-    else:
-        dest_path = dest['path']
     return dest_path, compare_key
 
 
@@ -307,11 +294,9 @@ def create_warning(path, error_message, skip_file=True):
     """
     print_string = "warning: "
     if skip_file:
-        print_string = print_string + "Skipping file " + path + ". "
-    print_string = print_string + error_message
-    warning_message = WarningResult(message=print_string, error=False,
-                                    warning=True)
-    return warning_message
+        print_string = f"{print_string}Skipping file {path}. "
+    print_string += error_message
+    return WarningResult(message=print_string, error=False, warning=True)
 
 
 class StdoutBytesWriter(object):
@@ -409,14 +394,14 @@ class BucketLister(object):
         if prefix is not None:
             kwargs['Prefix'] = prefix
         if extra_args is not None:
-            kwargs.update(extra_args)
+            kwargs |= extra_args
 
         paginator = self._client.get_paginator('list_objects_v2')
         pages = paginator.paginate(**kwargs)
         for page in pages:
             contents = page.get('Contents', [])
             for content in contents:
-                source_path = bucket + '/' + content['Key']
+                source_path = f'{bucket}/' + content['Key']
                 content['LastModified'] = self._date_parser(
                     content['LastModified'])
                 yield source_path, content
@@ -550,9 +535,8 @@ class RequestParamsMapper(object):
             'content_language': 'ContentLanguage',
             'expires': 'Expires'
         }
-        for cli_param_name in general_param_translation:
+        for cli_param_name, request_param_name in general_param_translation.items():
             if cli_params.get(cli_param_name):
-                request_param_name = general_param_translation[cli_param_name]
                 request_params[request_param_name] = cli_params[cli_param_name]
         cls._set_grant_params(request_params, cli_params)
 
@@ -765,9 +749,8 @@ class DirectoryCreatorSubscriber(BaseSubscriber):
             if not os.path.exists(d):
                 os.makedirs(d)
         except OSError as e:
-            if not e.errno == errno.EEXIST:
-                raise CreateDirectoryError(
-                    "Could not create directory %s: %s" % (d, e))
+            if e.errno != errno.EEXIST:
+                raise CreateDirectoryError(f"Could not create directory {d}: {e}")
 
 
 class NonSeekableStream(object):
@@ -792,7 +775,4 @@ class NonSeekableStream(object):
         self._fileobj = fileobj
 
     def read(self, amt=None):
-        if amt is None:
-            return self._fileobj.read()
-        else:
-            return self._fileobj.read(amt)
+        return self._fileobj.read() if amt is None else self._fileobj.read(amt)

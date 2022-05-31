@@ -19,13 +19,13 @@ class TestMBCommand(BaseAWSCommandParamsTest):
     prefix = 's3 mb '
 
     def test_make_bucket(self):
-        command = self.prefix + 's3://bucket'
+        command = f'{self.prefix}s3://bucket'
         self.run_cmd(command)
         self.assertEqual(len(self.operations_called), 1)
         self.assertEqual(self.operations_called[0][0].name, 'CreateBucket')
 
     def test_adds_location_constraint(self):
-        command = self.prefix + 's3://bucket --region us-west-2'
+        command = f'{self.prefix}s3://bucket --region us-west-2'
         self.parsed_responses = [{'Location': 'us-west-2'}]
         expected_params = {
             'Bucket': 'bucket',
@@ -36,12 +36,12 @@ class TestMBCommand(BaseAWSCommandParamsTest):
         self.assert_params_for_cmd(command, expected_params)
 
     def test_location_constraint_not_added_on_us_east_1(self):
-        command = self.prefix + 's3://bucket --region us-east-1'
+        command = f'{self.prefix}s3://bucket --region us-east-1'
         expected_params = {
             'Bucket': 'bucket'
         }
         self.assert_params_for_cmd(command, expected_params)
 
     def test_nonzero_exit_if_invalid_path_provided(self):
-        command = self.prefix + 'bucket'
+        command = f'{self.prefix}bucket'
         self.run_cmd(command, expected_rc=255)

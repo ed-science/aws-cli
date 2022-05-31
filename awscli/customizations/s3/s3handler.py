@@ -296,33 +296,36 @@ class BaseTransferRequestSubmitter(object):
         )
 
     def _warn_glacier(self, fileinfo):
-        if not self._cli_params.get('force_glacier_transfer'):
-            if not fileinfo.is_glacier_compatible():
-                LOGGER.debug(
-                    'Encountered glacier object s3://%s. Not performing '
-                    '%s on object.' % (fileinfo.src, fileinfo.operation_name))
-                if not self._cli_params.get('ignore_glacier_warnings'):
-                    warning = create_warning(
-                        's3://'+fileinfo.src,
-                        'Object is of storage class GLACIER. Unable to '
-                        'perform %s operations on GLACIER objects. You must '
-                        'restore the object to be able to perform the '
-                        'operation. See aws s3 %s help for additional '
-                        'parameter options to ignore or force these '
-                        'transfers.' %
-                        (fileinfo.operation_name, fileinfo.operation_name)
-                    )
-                    self._result_queue.put(warning)
-                return True
+        if (
+            not self._cli_params.get('force_glacier_transfer')
+            and not fileinfo.is_glacier_compatible()
+        ):
+            LOGGER.debug(
+                'Encountered glacier object s3://%s. Not performing '
+                '%s on object.' % (fileinfo.src, fileinfo.operation_name))
+            if not self._cli_params.get('ignore_glacier_warnings'):
+                warning = create_warning(
+                    f's3://{fileinfo.src}',
+                    'Object is of storage class GLACIER. Unable to '
+                    'perform %s operations on GLACIER objects. You must '
+                    'restore the object to be able to perform the '
+                    'operation. See aws s3 %s help for additional '
+                    'parameter options to ignore or force these '
+                    'transfers.'
+                    % (fileinfo.operation_name, fileinfo.operation_name),
+                )
+
+                self._result_queue.put(warning)
+            return True
         return False
 
     def _warn_parent_reference(self, fileinfo):
         # normpath() will use the OS path separator so we
         # need to take that into account when checking for a parent prefix.
-        parent_prefix = '..' + os.path.sep
-        escapes_cwd = os.path.normpath(fileinfo.compare_key).startswith(
-            parent_prefix)
-        if escapes_cwd:
+        parent_prefix = f'..{os.path.sep}'
+        if escapes_cwd := os.path.normpath(fileinfo.compare_key).startswith(
+            parent_prefix
+        ):
             warning = create_warning(
                 fileinfo.compare_key, "File references a parent directory.")
             self._result_queue.put(warning)
@@ -337,9 +340,7 @@ class BaseTransferRequestSubmitter(object):
         return relative_path(path)
 
     def _format_s3_path(self, path):
-        if path.startswith('s3://'):
-            return path
-        return 's3://' + path
+        return path if path.startswith('s3://') else f's3://{path}'
 
 
 class UploadRequestSubmitter(BaseTransferRequestSubmitter):
@@ -373,9 +374,8 @@ class UploadRequestSubmitter(BaseTransferRequestSubmitter):
     def _warn_if_too_large(self, fileinfo):
         if getattr(fileinfo, 'size') and fileinfo.size > MAX_UPLOAD_SIZE:
             file_path = relative_path(fileinfo.src)
-            warning_message = (
-                "File %s exceeds s3 upload limit of %s." % (
-                    file_path, human_readable_size(MAX_UPLOAD_SIZE)))
+            warning_message = f"File {file_path} exceeds s3 upload limit of {human_readable_size(MAX_UPLOAD_SIZE)}."
+
             warning = create_warning(
                 file_path, warning_message, skip_file=False)
             self._result_queue.put(warning)

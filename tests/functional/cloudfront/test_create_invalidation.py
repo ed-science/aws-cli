@@ -21,7 +21,7 @@ class TestCreateInvalidation(BaseAWSCommandParamsTest):
 
     def test_invalidation_batch_only(self):
         batch = "Paths={Quantity=2,Items=[foo.txt,bar.txt]},CallerReference=ab"
-        cmdline = self.prefix + '--invalidation-batch ' + batch
+        cmdline = f'{self.prefix}--invalidation-batch {batch}'
         result = {
             'DistributionId': 'my_id',
             'InvalidationBatch': {
@@ -32,7 +32,7 @@ class TestCreateInvalidation(BaseAWSCommandParamsTest):
         self.assert_params_for_cmd(cmdline, result)
 
     def test_paths_only(self):
-        cmdline = self.prefix + '--paths index.html foo.txt'
+        cmdline = f'{self.prefix}--paths index.html foo.txt'
         result = {
             'DistributionId': 'my_id',
             'InvalidationBatch': {

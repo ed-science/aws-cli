@@ -143,7 +143,7 @@ class S3Uploader(object):
         filemd5 = self.file_checksum(file_name)
         remote_path = filemd5
         if extension:
-            remote_path = remote_path + "." + extension
+            remote_path = f"{remote_path}.{extension}"
 
         return self.upload(file_name, remote_path)
 

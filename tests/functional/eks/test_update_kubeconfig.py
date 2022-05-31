@@ -44,9 +44,8 @@ def sanitize_output(output):
     for line in output.splitlines():
         if bool(re.match('warning', line.strip(), re.I)):
             return to_return.strip()
-        else:
-            to_return += line
-            to_return += '\n'
+        to_return += line
+        to_return += '\n'
     return to_return.strip()
 
 def build_environment(entries):

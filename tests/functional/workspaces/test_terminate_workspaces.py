@@ -18,7 +18,7 @@ class TestTerminateWorkspaces(BaseAWSCommandParamsTest):
     prefix = 'workspaces terminate-workspaces'
 
     def test_shorthand(self):
-        command = self.prefix + ' --terminate-workspace-requests id1 id2 id3'
+        command = f'{self.prefix} --terminate-workspace-requests id1 id2 id3'
         expected_params = {
             'TerminateWorkspaceRequests': [
                 {"WorkspaceId": "id1"},

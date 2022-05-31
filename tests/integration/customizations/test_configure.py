@@ -23,7 +23,9 @@ class TestConfigureCommand(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         self.config_filename = os.path.join(
-            self.tempdir, 'config-%s' % random.randint(1, 100000))
+            self.tempdir, f'config-{random.randint(1, 100000)}'
+        )
+
         self.env_vars = os.environ.copy()
         self.env_vars['AWS_CONFIG_FILE'] = self.config_filename
         self.env_vars['AWS_SHARED_CREDENTIALS_FILE'] = 'asdf-does-not-exist'
@@ -35,8 +37,9 @@ class TestConfigureCommand(unittest.TestCase):
 
     def assert_no_errors(self, p):
         self.assertEqual(
-            p.rc, 0,
-            "Non zero rc (%s) received: %s" % (p.rc, p.stdout + p.stderr))
+            p.rc, 0, f"Non zero rc ({p.rc}) received: {p.stdout + p.stderr}"
+        )
+
         self.assertEqual(p.stderr, '')
 
     def set_config_file_contents(self, contents):

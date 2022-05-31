@@ -18,7 +18,7 @@ class TestDescribeInstanceHealth(BaseAWSCommandParamsTest):
     prefix = 'elb describe-instance-health'
 
     def test_shorthand(self):
-        command = self.prefix + ' --load-balancer-name foo'
+        command = f'{self.prefix} --load-balancer-name foo'
         command += ' --instances id1 id2 id3'
         expected_params = {
             'LoadBalancerName': 'foo',

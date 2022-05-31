@@ -98,7 +98,7 @@ class ReSTStyle(BaseStyle):
             return
 
         self.doc.push_write(last_write)
-        self.doc.write(markup + ' ')
+        self.doc.write(f'{markup} ')
 
     def start_bold(self, attrs=None):
         self._start_inline('**')
@@ -123,7 +123,7 @@ class ReSTStyle(BaseStyle):
     def ref(self, title, link=None):
         if link is None:
             link = title
-        self.doc.write(':doc:`%s <%s>`' % (title, link))
+        self.doc.write(f':doc:`{title} <{link}>`')
 
     def _heading(self, s, border_char):
         border = border_char * len(s)
@@ -219,13 +219,13 @@ class ReSTStyle(BaseStyle):
         self.doc.do_translation = True
 
     def link_target_definition(self, refname, link):
-        self.doc.writeln('.. _%s: %s' % (refname, link))
+        self.doc.writeln(f'.. _{refname}: {link}')
 
     def sphinx_reference_label(self, label, text=None):
         if text is None:
             text = label
         if self.doc.target == 'html':
-            self.doc.write(':ref:`%s <%s>`' % (text, label))
+            self.doc.write(f':ref:`{text} <{label}>`')
         else:
             self.doc.write(text)
 
@@ -238,14 +238,14 @@ class ReSTStyle(BaseStyle):
                 if ':' in last_write:
                     last_write = last_write.replace(':', r'\:')
                 self.doc.push_write(last_write)
-                self.doc.push_write(' <%s>`__' % self.a_href)
+                self.doc.push_write(f' <{self.a_href}>`__')
             elif last_write == '`':
                 # Look at start_a().  It will do a self.doc.write('`')
                 # which is the start of the link title.  If that is the
                 # case then there was no link text.  We should just
                 # use an inline link.  The syntax of this is
                 # `<http://url>`_
-                self.doc.push_write('`<%s>`__' % self.a_href)
+                self.doc.push_write(f'`<{self.a_href}>`__')
             else:
                 self.doc.push_write(self.a_href)
                 self.doc.hrefs[self.a_href] = self.a_href
@@ -344,11 +344,10 @@ class ReSTStyle(BaseStyle):
     def tocitem(self, item, file_name=None):
         if self.doc.target == 'man':
             self.li(item)
+        elif file_name:
+            self.doc.writeln(f'  {file_name}')
         else:
-            if file_name:
-                self.doc.writeln('  %s' % file_name)
-            else:
-                self.doc.writeln('  %s' % item)
+            self.doc.writeln(f'  {item}')
 
     def hidden_toctree(self):
         if self.doc.target == 'html':
@@ -365,11 +364,11 @@ class ReSTStyle(BaseStyle):
         if title is not None:
             self.doc.writeln(title)
         if depth is not None:
-            self.doc.writeln('   :depth: %s' % depth)
+            self.doc.writeln(f'   :depth: {depth}')
 
     def start_sphinx_py_class(self, class_name):
         self.new_paragraph()
-        self.doc.write('.. py:class:: %s' % class_name)
+        self.doc.write(f'.. py:class:: {class_name}')
         self.indent()
         self.new_paragraph()
 
@@ -379,9 +378,9 @@ class ReSTStyle(BaseStyle):
 
     def start_sphinx_py_method(self, method_name, parameters=None):
         self.new_paragraph()
-        content = '.. py:method:: %s' % method_name
+        content = f'.. py:method:: {method_name}'
         if parameters is not None:
-            content += '(%s)' % parameters
+            content += f'({parameters})'
         self.doc.write(content)
         self.indent()
         self.new_paragraph()
@@ -392,7 +391,7 @@ class ReSTStyle(BaseStyle):
 
     def start_sphinx_py_attr(self, attr_name):
         self.new_paragraph()
-        self.doc.write('.. py:attribute:: %s' % attr_name)
+        self.doc.write(f'.. py:attribute:: {attr_name}')
         self.indent()
         self.new_paragraph()
 
@@ -407,12 +406,12 @@ class ReSTStyle(BaseStyle):
 
     def external_link(self, title, link):
         if self.doc.target == 'html':
-            self.doc.write('`%s <%s>`_' % (title, link))
+            self.doc.write(f'`{title} <{link}>`_')
         else:
             self.doc.write(title)
 
     def internal_link(self, title, page):
         if self.doc.target == 'html':
-            self.doc.write(':doc:`%s <%s>`' % (title, page))
+            self.doc.write(f':doc:`{title} <{page}>`')
         else:
             self.doc.write(title)

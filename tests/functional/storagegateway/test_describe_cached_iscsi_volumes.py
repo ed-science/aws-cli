@@ -19,14 +19,14 @@ class TestDescribeCachedISCSIVolumes(BaseAWSCommandParamsTest):
     VOLUME_ARN = 'a' * 50
 
     def test_accepts_old_argname(self):
-        cmdline = (self.PREFIX + '  --volume-ar-ns %s') % (self.VOLUME_ARN,)
+        cmdline = f'{self.PREFIX}  --volume-ar-ns %s' % (self.VOLUME_ARN,)
         params = {
             'VolumeARNs': [self.VOLUME_ARN],
         }
         self.assert_params_for_cmd(cmdline, params)
 
     def test_accepts_fixed_param_name(self):
-        cmdline = (self.PREFIX + '  --volume-arns %s') % (self.VOLUME_ARN,)
+        cmdline = f'{self.PREFIX}  --volume-arns %s' % (self.VOLUME_ARN,)
         params = {
             'VolumeARNs': [self.VOLUME_ARN],
         }

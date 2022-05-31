@@ -131,10 +131,7 @@ class GenerateProductCommand(GenerateBaseCommand):
         return response
 
     def _extract_tags(self, args_tags):
-        tags = []
-        for tag in args_tags:
-            tags.append(dict(t.split('=') for t in tag.split(',')))
-        return tags
+        return [dict(t.split('=') for t in tag.split(',')) for tag in args_tags]
 
     def build_args(self, parsed_args, s3_url):
         args = {

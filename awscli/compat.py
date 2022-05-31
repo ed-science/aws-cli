@@ -58,10 +58,7 @@ except ImportError:
 is_windows = sys.platform == 'win32'
 
 
-if is_windows:
-    default_pager = 'more'
-else:
-    default_pager = 'less -R'
+default_pager = 'more' if is_windows else 'less -R'
 
 
 class StdinMissingError(Exception):
@@ -98,7 +95,7 @@ def ensure_text_type(s):
         return s
     if isinstance(s, six.binary_type):
         return s.decode('utf-8')
-    raise ValueError("Expected str, unicode or bytes, received %s." % type(s))
+    raise ValueError(f"Expected str, unicode or bytes, received {type(s)}.")
 
 
 if six.PY3:
@@ -241,10 +238,7 @@ def compat_shell_quote(s, platform=None):
     if platform is None:
         platform = sys.platform
 
-    if platform == "win32":
-        return _windows_shell_quote(s)
-    else:
-        return shlex_quote(s)
+    return _windows_shell_quote(s) if platform == "win32" else shlex_quote(s)
 
 
 def _windows_shell_quote(s):
@@ -335,13 +329,17 @@ def ignore_user_entered_signals():
     """
     Ignores user entered signals to avoid process getting killed.
     """
-    if is_windows:
-        signal_list = [signal.SIGINT]
-    else:
-        signal_list = [signal.SIGINT, signal.SIGQUIT, signal.SIGTSTP]
-    actual_signals = []
-    for user_signal in signal_list:
-        actual_signals.append(signal.signal(user_signal, signal.SIG_IGN))
+    signal_list = (
+        [signal.SIGINT]
+        if is_windows
+        else [signal.SIGINT, signal.SIGQUIT, signal.SIGTSTP]
+    )
+
+    actual_signals = [
+        signal.signal(user_signal, signal.SIG_IGN)
+        for user_signal in signal_list
+    ]
+
     try:
         yield
     finally:
@@ -443,9 +441,7 @@ except ImportError:
         if m is not None:
             return tuple(m.groups())
 
-        # Unknown format... take the first two words
-        l = firstline.strip().split()
-        if l:
+        if l := firstline.strip().split():
             version = l[0]
             if len(l) > 1:
                 id = l[1]
@@ -481,23 +477,17 @@ except ImportError:
         # check for the Debian/Ubuntu /etc/lsb-release file first, needed so
         # that the distribution doesn't get identified as Debian.
         # https://bugs.python.org/issue9514
-        try:
+        with contextlib.suppress(EnvironmentError, UnboundLocalError):
             with open("/etc/lsb-release", "r") as etclsbrel:
                 for line in etclsbrel:
-                    m = _distributor_id_file_re.search(line)
-                    if m:
+                    if m := _distributor_id_file_re.search(line):
                         _u_distname = m.group(1).strip()
-                    m = _release_file_re.search(line)
-                    if m:
+                    if m := _release_file_re.search(line):
                         _u_version = m.group(1).strip()
-                    m = _codename_file_re.search(line)
-                    if m:
+                    if m := _codename_file_re.search(line):
                         _u_id = m.group(1).strip()
                 if _u_distname and _u_version:
                     return (_u_distname, _u_version, _u_id)
-        except (EnvironmentError, UnboundLocalError):
-                pass
-
         try:
             etc = os.listdir(_UNIXCONFDIR)
         except OSError:

@@ -63,7 +63,9 @@ class BaseHistoryCommandParamsTest(BaseAWSCommandParamsTest):
 
     def _apply_history_recorder_patch(self, module, history_recorder):
         patch_history_recorder = mock.patch(
-            module + '.HISTORY_RECORDER', history_recorder)
+            f'{module}.HISTORY_RECORDER', history_recorder
+        )
+
         patch_history_recorder.start()
         self.addCleanup(patch_history_recorder.stop)
 

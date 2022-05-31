@@ -90,8 +90,7 @@ class TestCreateVirtualMFADevice(BaseAWSCommandParamsTest):
         self.addCleanup(self.remove_file_if_exists, outfile)
         cmdline = self.prefix
         cmdline += ' --virtual-mfa-device-name fiebaz'
-        cmdline += (
-            ' --outfile %s --bootstrap-method Base32StringSeed' % outfile)
+        cmdline += f' --outfile {outfile} --bootstrap-method Base32StringSeed'
         result = {"VirtualMFADeviceName": 'fiebaz'}
         self.assert_params_for_cmd(cmdline, result)
         self.assertTrue(os.path.exists(outfile))
@@ -101,7 +100,7 @@ class TestCreateVirtualMFADevice(BaseAWSCommandParamsTest):
         self.addCleanup(self.remove_file_if_exists, outfile)
         cmdline = self.prefix
         cmdline += ' --virtual-mfa-device-name fiebaz'
-        cmdline += ' --outfile %s --bootstrap-method QRCodePNG' % outfile
+        cmdline += f' --outfile {outfile} --bootstrap-method QRCodePNG'
         result = {"VirtualMFADeviceName": 'fiebaz'}
         self.assert_params_for_cmd(cmdline, result)
         self.assertTrue(os.path.exists(outfile))
@@ -111,7 +110,7 @@ class TestCreateVirtualMFADevice(BaseAWSCommandParamsTest):
         self.addCleanup(self.remove_file_if_exists, outfile)
         cmdline = self.prefix
         cmdline += ' --virtual-mfa-device-name fiebaz'
-        cmdline += ' --outfile %s --bootstrap-method QRCodePNG' % outfile
+        cmdline += f' --outfile {outfile} --bootstrap-method QRCodePNG'
         self.assert_params_for_cmd(cmdline, expected_rc=255)
 
     def test_relative_filename(self):
@@ -119,7 +118,7 @@ class TestCreateVirtualMFADevice(BaseAWSCommandParamsTest):
         self.addCleanup(self.remove_file_if_exists, outfile)
         cmdline = self.prefix
         cmdline += ' --virtual-mfa-device-name fiebaz'
-        cmdline += ' --outfile %s --bootstrap-method QRCodePNG' % outfile
+        cmdline += f' --outfile {outfile} --bootstrap-method QRCodePNG'
         result = {"VirtualMFADeviceName": 'fiebaz'}
         self.assert_params_for_cmd(cmdline, result)
         self.assertTrue(os.path.exists(outfile))
@@ -129,7 +128,7 @@ class TestCreateVirtualMFADevice(BaseAWSCommandParamsTest):
         self.addCleanup(self.remove_file_if_exists, outfile)
         cmdline = self.prefix
         cmdline += ' --virtual-mfa-device-name fiebaz'
-        cmdline += ' --outfile %s --bootstrap-method QRCodePNG' % outfile
+        cmdline += f' --outfile {outfile} --bootstrap-method QRCodePNG'
         self.assert_params_for_cmd(cmdline, expected_rc=255)
 
     def test_bad_response(self):

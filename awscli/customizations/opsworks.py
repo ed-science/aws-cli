@@ -179,12 +179,11 @@ class OpsWorksRegister(BasicCommand):
             raise ValueError(
                 "--use-instance-profile is only supported for EC2.")
 
-        if args.hostname:
-            if not HOSTNAME_RE.match(args.hostname):
-                raise ValueError(
-                    "Invalid hostname: '%s'. Hostnames must consist of "
-                    "letters, digits and dashes only and must not start or "
-                    "end with a dash." % args.hostname)
+        if args.hostname and not HOSTNAME_RE.match(args.hostname):
+            raise ValueError(
+                "Invalid hostname: '%s'. Hostnames must consist of "
+                "letters, digits and dashes only and must not start or "
+                "end with a dash." % args.hostname)
 
     def retrieve_stack(self, args):
         """
@@ -252,13 +251,12 @@ class OpsWorksRegister(BasicCommand):
             ]
 
             if not instances:
-                raise ValueError(
-                    "Did not find any instance matching %s." % args.target)
+                raise ValueError(f"Did not find any instance matching {args.target}.")
             elif len(instances) > 1:
                 raise ValueError(
-                    "Found multiple instances matching %s: %s." % (
-                        args.target,
-                        ", ".join(i['InstanceId'] for i in instances)))
+                    f"""Found multiple instances matching {args.target}: {", ".join((i['InstanceId'] for i in instances))}."""
+                )
+
 
             self._ec2_instance = instances[0]
 
@@ -337,26 +335,22 @@ class OpsWorksRegister(BasicCommand):
             return
 
         LOG.debug("Creating the IAM group if necessary")
-        group_name = "OpsWorks-%s" % clean_for_iam(self._stack['StackId'])
+        group_name = f"OpsWorks-{clean_for_iam(self._stack['StackId'])}"
         try:
             self.iam.create_group(GroupName=group_name, Path=IAM_PATH)
             LOG.debug("Created IAM group %s", group_name)
         except ClientError as e:
             if e.response.get('Error', {}).get('Code') == 'EntityAlreadyExists':
                 LOG.debug("IAM group %s exists, continuing", group_name)
-                # group already exists, good
-                pass
             else:
                 raise
 
         # create the IAM user, trying alternatives if it already exists
         LOG.debug("Creating an IAM user")
-        base_username = "OpsWorks-%s-%s" % (
-            shorten_name(clean_for_iam(self._stack['Name']), 25),
-            shorten_name(clean_for_iam(self._name_for_iam), 25)
-        )
+        base_username = f"OpsWorks-{shorten_name(clean_for_iam(self._stack['Name']), 25)}-{shorten_name(clean_for_iam(self._name_for_iam), 25)}"
+
         for try_ in range(20):
-            username = base_username + ("+%s" % try_ if try_ else "")
+            username = base_username + (f"+{try_}" if try_ else "")
             try:
                 self.iam.create_user(UserName=username, Path=IAM_PATH)
             except ClientError as e:
@@ -365,8 +359,6 @@ class OpsWorksRegister(BasicCommand):
                         "IAM user %s already exists, trying another name",
                         username
                     )
-                    # user already exists, try the next one
-                    pass
                 else:
                     raise
             else:
@@ -384,26 +376,25 @@ class OpsWorksRegister(BasicCommand):
                 UserName=username
             )
         except ClientError as e:
-            if e.response.get('Error', {}).get('Code') == 'AccessDenied':
-                LOG.debug(
-                    "Unauthorized to attach policy %s to user %s. Trying "
-                    "to put user policy",
-                    IAM_POLICY_ARN,
-                    username
-                )
-                self.iam.put_user_policy(
-                    PolicyName=IAM_USER_POLICY_NAME,
-                    PolicyDocument=self._iam_policy_document(
-                        self._stack['Arn'], IAM_USER_POLICY_TIMEOUT),
-                    UserName=username
-                )
-                LOG.debug(
-                    "Put policy %s to user %s",
-                    IAM_USER_POLICY_NAME,
-                    username
-                )
-            else:
+            if e.response.get('Error', {}).get('Code') != 'AccessDenied':
                 raise
+            LOG.debug(
+                "Unauthorized to attach policy %s to user %s. Trying "
+                "to put user policy",
+                IAM_POLICY_ARN,
+                username
+            )
+            self.iam.put_user_policy(
+                PolicyName=IAM_USER_POLICY_NAME,
+                PolicyDocument=self._iam_policy_document(
+                    self._stack['Arn'], IAM_USER_POLICY_TIMEOUT),
+                UserName=username
+            )
+            LOG.debug(
+                "Put policy %s to user %s",
+                IAM_USER_POLICY_NAME,
+                username
+            )
         else:
             LOG.debug(
                 "Attached policy %s to user %s",
@@ -520,8 +511,9 @@ class OpsWorksRegister(BasicCommand):
 
     @staticmethod
     def _to_ruby_yaml(parameters):
-        return "\n".join(":%s: %s" % (k, json.dumps(v))
-                         for k, v in sorted(parameters.items()))
+        return "\n".join(
+            f":{k}: {json.dumps(v)}" for k, v in sorted(parameters.items())
+        )
 
 
 def clean_for_iam(name):
@@ -540,4 +532,4 @@ def shorten_name(name, max_length):
     if len(name) <= max_length:
         return name
     q, r = divmod(max_length - 3, 2)
-    return name[:q + r] + "..." + name[-q:]
+    return f"{name[:q + r]}...{name[-q:]}"

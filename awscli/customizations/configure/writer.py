@@ -191,11 +191,13 @@ class ConfigFileWriter(object):
         new_contents = []
         for key, value in list(new_values.items()):
             if isinstance(value, dict):
-                subindent = indent + '    '
+                subindent = f'{indent}    '
                 new_contents.append('%s%s =\n' % (indent, key))
-                for subkey, subval in list(value.items()):
-                    new_contents.append('%s%s = %s\n' % (subindent, subkey,
-                                                         subval))
+                new_contents.extend(
+                    '%s%s = %s\n' % (subindent, subkey, subval)
+                    for subkey, subval in list(value.items())
+                )
+
             else:
                 new_contents.append('%s%s = %s\n' % (indent, key, value))
             del new_values[key]
@@ -203,7 +205,7 @@ class ConfigFileWriter(object):
 
     def _matches_section(self, match, section_name):
         parts = section_name.split(' ')
-        unquoted_match = match.group(0) == '[%s]' % section_name
+        unquoted_match = match.group(0) == f'[{section_name}]'
         if len(parts) > 1:
             quoted_match = match.group(0) == '[%s "%s"]' % (
                 parts[0], ' '.join(parts[1:]))
