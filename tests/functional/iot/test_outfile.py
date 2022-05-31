@@ -33,9 +33,12 @@ class TestOutFileQueryArguments(BaseAWSCommandParamsTest):
             }
         }
         outfile = self.files.full_path('cert.pem')
-        cmdline = 'iot create-certificate-from-csr'
-        cmdline += ' --certificate-signing-request "abc"'
-        cmdline += ' --certificate-pem-outfile ' + outfile
+        cmdline = (
+            'iot create-certificate-from-csr'
+            + ' --certificate-signing-request "abc"'
+        )
+
+        cmdline += f' --certificate-pem-outfile {outfile}'
         self.run_cmd(cmdline, 0)
         self.assertTrue(os.path.exists(outfile))
         with open(outfile) as fp:
@@ -57,9 +60,9 @@ class TestOutFileQueryArguments(BaseAWSCommandParamsTest):
         out_pub = self.files.full_path('key_rsa.pub')
         out_priv = self.files.full_path('key_rsa')
         cmdline = 'iot create-keys-and-certificate'
-        cmdline += ' --certificate-pem-outfile ' + out_cert
-        cmdline += ' --public-key-outfile ' + out_pub
-        cmdline += ' --private-key-outfile ' + out_priv
+        cmdline += f' --certificate-pem-outfile {out_cert}'
+        cmdline += f' --public-key-outfile {out_pub}'
+        cmdline += f' --private-key-outfile {out_priv}'
         self.run_cmd(cmdline, 0)
         self.assertTrue(os.path.exists(out_cert))
         self.assertTrue(os.path.exists(out_pub))
@@ -81,9 +84,12 @@ class TestOutFileQueryArguments(BaseAWSCommandParamsTest):
             }
         }
         self.http_response.status_code = 403
-        cmdline = 'iot create-certificate-from-csr'
-        cmdline += ' --certificate-signing-request "abc"'
-        cmdline += ' --certificate-pem-outfile ' + outfile
+        cmdline = (
+            'iot create-certificate-from-csr'
+            + ' --certificate-signing-request "abc"'
+        )
+
+        cmdline += f' --certificate-pem-outfile {outfile}'
         # The error message should be in the stderr.
         self.assert_params_for_cmd(
             cmdline,
@@ -93,9 +99,12 @@ class TestOutFileQueryArguments(BaseAWSCommandParamsTest):
     def test_ensures_file_is_writable_before_sending(self):
         outfile = os.sep.join(['', 'does', 'not', 'exist_', 'file.txt'])
         self.parsed_response = {}
-        cmdline = 'iot create-certificate-from-csr'
-        cmdline += ' --certificate-signing-request "abc"'
-        cmdline += ' --certificate-pem-outfile ' + outfile
+        cmdline = (
+            'iot create-certificate-from-csr'
+            + ' --certificate-signing-request "abc"'
+        )
+
+        cmdline += f' --certificate-pem-outfile {outfile}'
         self.assert_params_for_cmd(
             cmdline,
             stderr_contains='Unable to write to file: ',

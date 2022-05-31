@@ -71,20 +71,24 @@ class FileInfo(object):
         :returns: True if the FileInfo's operation will not fail because the
             operation is on a glacier object. False if it will fail.
         """
-        if self._is_glacier_object(self.associated_response_data):
-            if self.operation_name in ['copy', 'download']:
-                return False
-            elif self.operation_name == 'move':
-                if self.src_type == 's3':
-                    return False
-        return True
+        return (
+            not self._is_glacier_object(self.associated_response_data)
+            or (
+                self.operation_name in ['copy', 'download']
+                or self.operation_name != 'move'
+                or self.src_type != 's3'
+            )
+            and self.operation_name not in ['copy', 'download']
+        )
 
     def _is_glacier_object(self, response_data):
         glacier_storage_classes = ['GLACIER', 'DEEP_ARCHIVE']
-        if response_data:
-            if response_data.get('StorageClass') in glacier_storage_classes \
-                    and not self._is_restored(response_data):
-                return True
+        if (
+            response_data
+            and response_data.get('StorageClass') in glacier_storage_classes
+            and not self._is_restored(response_data)
+        ):
+            return True
         return False
 
     def _is_restored(self, response_data):

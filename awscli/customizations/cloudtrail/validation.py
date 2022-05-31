@@ -66,7 +66,7 @@ def parse_date(date_string):
     try:
         return parser.parse(date_string)
     except ValueError:
-        raise ValueError('Unable to parse date value: %s' % date_string)
+        raise ValueError(f'Unable to parse date value: {date_string}')
 
 
 def assert_cloudtrail_arn_is_valid(trail_arn):
@@ -75,7 +75,7 @@ def assert_cloudtrail_arn_is_valid(trail_arn):
     ARNs look like: arn:aws:cloudtrail:us-east-1:123456789012:trail/foo"""
     pattern = re.compile('arn:.+:cloudtrail:.+:\d{12}:trail/.+')
     if not pattern.match(trail_arn):
-        raise ValueError('Invalid trail ARN provided: %s' % trail_arn)
+        raise ValueError(f'Invalid trail ARN provided: {trail_arn}')
 
 
 def create_digest_traverser(cloudtrail_client, organization_client,
@@ -126,8 +126,7 @@ def create_digest_traverser(cloudtrail_client, organization_client,
         LOG.debug('Loaded trail info: %s', trail_info)
         bucket = trail_info['S3BucketName']
         prefix = trail_info.get('S3KeyPrefix', None)
-        is_org_trail = trail_info.get('IsOrganizationTrail')
-        if is_org_trail:
+        if is_org_trail := trail_info.get('IsOrganizationTrail'):
             if not account_id:
                 raise ParameterRequiredError(
                     "Missing required parameter for organization "
@@ -232,7 +231,7 @@ class PublicKeyProvider(object):
             StartTime=start_date, EndTime=end_date)
         public_keys_in_range = public_keys['PublicKeyList']
         LOG.debug('Loaded public keys in range: %s', public_keys_in_range)
-        return dict((key['Fingerprint'], key) for key in public_keys_in_range)
+        return {key['Fingerprint']: key for key in public_keys_in_range}
 
 
 class DigestProvider(object):
@@ -342,7 +341,7 @@ class DigestProvider(object):
         )
         key = template.format(**template_params)
         if key_prefix:
-            key = key_prefix + '/' + key
+            key = f'{key_prefix}/{key}'
         return key
 
     def _create_digest_key_regex(self, key_prefix):
@@ -364,8 +363,8 @@ class DigestProvider(object):
         )
         key = template.format(**template_params)
         if key_prefix:
-            key = re.escape(key_prefix) + '/' + key
-        return '^' + key + '$'
+            key = f'{re.escape(key_prefix)}/{key}'
+        return f'^{key}$'
 
 
 class DigestTraverser(object):
@@ -543,9 +542,9 @@ class DigestTraverser(object):
             start_date, end_date)
         if not public_keys:
             raise RuntimeError(
-                'No public keys found between %s and %s' %
-                (format_display_date(start_date),
-                 format_display_date(end_date)))
+                f'No public keys found between {format_display_date(start_date)} and {format_display_date(end_date)}'
+            )
+
         return public_keys
 
 
@@ -795,8 +794,7 @@ class CloudTrailValidateLogs(BasicCommand):
             for chunk in iter(lambda: response['Body'].read(2048), b""):
                 data = gzip_inflater.decompress(chunk)
                 rolling_hash.update(data)
-            remaining_data = gzip_inflater.flush()
-            if remaining_data:
+            if remaining_data := gzip_inflater.flush():
                 rolling_hash.update(remaining_data)
             computed_hash = rolling_hash.hexdigest()
             if computed_hash != log['hashValue']:
@@ -863,9 +861,9 @@ class CloudTrailValidateLogs(BasicCommand):
 
     def _on_digest_gap(self, **kwargs):
         self._write_status(
-            'No log files were delivered by CloudTrail between %s and %s'
-            % (format_display_date(kwargs['next_end_date']),
-               format_display_date(kwargs['last_start_date'])), True)
+            f"No log files were delivered by CloudTrail between {format_display_date(kwargs['next_end_date'])} and {format_display_date(kwargs['last_start_date'])}",
+            True,
+        )
 
     def _on_invalid_digest(self, message, **kwargs):
         self._invalid_digests += 1

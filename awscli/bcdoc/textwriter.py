@@ -153,18 +153,15 @@ class TextTranslator(nodes.NodeVisitor):
 
     def visit_title(self, node):
         if isinstance(node.parent, nodes.Admonition):
-            self.add_text(node.astext()+': ')
+            self.add_text(f'{node.astext()}: ')
             raise nodes.SkipNode
         self.new_state(0)
 
     def depart_title(self, node):
-        if isinstance(node.parent, nodes.section):
-            char = self._title_char
-        else:
-            char = '^'
+        char = self._title_char if isinstance(node.parent, nodes.section) else '^'
         text = ''.join(x[1] for x in self.states.pop() if x[0] == -1)
         self.stateindent.pop()
-        self.states[-1].append((0, ['', text, '%s' % (char * len(text)), '']))
+        self.states[-1].append((0, ['', text, f'{char * len(text)}', '']))
 
     def visit_subtitle(self, node):
         pass
@@ -187,7 +184,7 @@ class TextTranslator(nodes.NodeVisitor):
     def visit_desc_signature(self, node):
         self.new_state(0)
         if node.parent['objtype'] in ('class', 'exception'):
-            self.add_text('%s ' % node.parent['objtype'])
+            self.add_text(f"{node.parent['objtype']} ")
 
     def depart_desc_signature(self, node):
         # XXX: wrap signatures in a way that makes sense
@@ -271,16 +268,14 @@ class TextTranslator(nodes.NodeVisitor):
 
     def visit_productionlist(self, node):
         self.new_state()
-        names = []
-        for production in node:
-            names.append(production['tokenname'])
+        names = [production['tokenname'] for production in node]
         maxlen = max(len(name) for name in names)
         for production in node:
             if production['tokenname']:
                 self.add_text(production['tokenname'].ljust(maxlen) + ' ::=')
                 lastname = production['tokenname']
             else:
-                self.add_text('%s    ' % (' '*len(lastname)))
+                self.add_text(f"{' ' * len(lastname)}    ")
             self.add_text(production.astext() + self.nl)
         self.end_state(wrap=False)
         raise nodes.SkipNode
@@ -296,7 +291,7 @@ class TextTranslator(nodes.NodeVisitor):
         self.new_state(len(self._footnote) + 3)
 
     def depart_footnote(self, node):
-        self.end_state(first='[%s] ' % self._footnote)
+        self.end_state(first=f'[{self._footnote}] ')
 
     def visit_citation(self, node):
         if len(node) and isinstance(node[0], nodes.label):
@@ -306,7 +301,7 @@ class TextTranslator(nodes.NodeVisitor):
         self.new_state(len(self._citlabel) + 3)
 
     def depart_citation(self, node):
-        self.end_state(first='[%s] ' % self._citlabel)
+        self.end_state(first=f'[{self._citlabel}] ')
 
     def visit_label(self, node):
         raise nodes.SkipNode
@@ -431,8 +426,7 @@ class TextTranslator(nodes.NodeVisitor):
         def writesep(char='-'):
             out = ['+']
             for width in realwidths:
-                out.append(char * (width+2))
-                out.append('+')
+                out.extend((char * (width+2), '+'))
             self.add_text(''.join(out) + self.nl)
 
         def writerow(row):
@@ -441,7 +435,7 @@ class TextTranslator(nodes.NodeVisitor):
                 out = ['|']
                 for i, cell in enumerate(line):
                     if cell:
-                        out.append(' ' + cell.ljust(realwidths[i]+1))
+                        out.append(f' {cell.ljust(realwidths[i]+1)}')
                     else:
                         out.append(' ' * (realwidths[i] + 2))
                     out.append('|')
@@ -499,10 +493,7 @@ class TextTranslator(nodes.NodeVisitor):
         if self.list_counter[-1] == -1:
             # bullet list
             self.new_state(2)
-        elif self.list_counter[-1] == -2:
-            # definition list
-            pass
-        else:
+        elif self.list_counter[-1] != -2:
             # enumerated list
             self.list_counter[-1] += 1
             self.new_state(len(str(self.list_counter[-1])) + 2)
@@ -510,10 +501,8 @@ class TextTranslator(nodes.NodeVisitor):
     def depart_list_item(self, node):
         if self.list_counter[-1] == -1:
             self.end_state(first='* ', end=None)
-        elif self.list_counter[-1] == -2:
-            pass
-        else:
-            self.end_state(first='%s. ' % self.list_counter[-1], end=None)
+        elif self.list_counter[-1] != -2:
+            self.end_state(first=f'{self.list_counter[-1]}. ', end=None)
 
     def visit_definition_list_item(self, node):
         self._li_has_classifier = len(node) >= 2 and \
@@ -692,7 +681,7 @@ class TextTranslator(nodes.NodeVisitor):
 
     def depart_abbreviation(self, node):
         if node.hasattr('explanation'):
-            self.add_text(' (%s)' % node['explanation'])
+            self.add_text(f" ({node['explanation']})")
 
     def visit_title_reference(self, node):
         self.add_text('*')
@@ -719,11 +708,11 @@ class TextTranslator(nodes.NodeVisitor):
         pass
 
     def visit_footnote_reference(self, node):
-        self.add_text('[%s]' % node.astext())
+        self.add_text(f'[{node.astext()}]')
         raise nodes.SkipNode
 
     def visit_citation_reference(self, node):
-        self.add_text('[%s]' % node.astext())
+        self.add_text(f'[{node.astext()}]')
         raise nodes.SkipNode
 
     def visit_Text(self, node):
@@ -752,7 +741,7 @@ class TextTranslator(nodes.NodeVisitor):
 
     def visit_system_message(self, node):
         self.new_state(0)
-        self.add_text('<SYSTEM MESSAGE: %s>' % node.astext())
+        self.add_text(f'<SYSTEM MESSAGE: {node.astext()}>')
         self.end_state()
         raise nodes.SkipNode
 
@@ -773,7 +762,7 @@ class TextTranslator(nodes.NodeVisitor):
 
     def _make_depart_admonition(name):
         def depart_admonition(self, node):
-            self.end_state(first=name.capitalize() + ': ')
+            self.end_state(first=f'{name.capitalize()}: ')
         return depart_admonition
 
     visit_attention = _visit_admonition
@@ -796,4 +785,4 @@ class TextTranslator(nodes.NodeVisitor):
     depart_warning = _make_depart_admonition('warning')
 
     def unknown_visit(self, node):
-        raise NotImplementedError('Unknown node: ' + node.__class__.__name__)
+        raise NotImplementedError(f'Unknown node: {node.__class__.__name__}')

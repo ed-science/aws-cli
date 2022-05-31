@@ -48,9 +48,8 @@ def _get_case_insensitive_key(target_obj, target_key):
 def get_app_name(service, cluster, app_value):
     if app_value is not None:
         return app_value
-    else:
-        suffix = _get_ecs_suffix(service, cluster)
-        return APP_PREFIX + suffix
+    suffix = _get_ecs_suffix(service, cluster)
+    return APP_PREFIX + suffix
 
 
 def get_cluster_name_from_arn(arn):
@@ -60,18 +59,13 @@ def get_cluster_name_from_arn(arn):
 def get_deploy_group_name(service, cluster, dg_value):
     if dg_value is not None:
         return dg_value
-    else:
-        suffix = _get_ecs_suffix(service, cluster)
-        return DGP_PREFIX + suffix
+    suffix = _get_ecs_suffix(service, cluster)
+    return DGP_PREFIX + suffix
 
 
 def _get_ecs_suffix(service, cluster):
-    if cluster is None:
-        cluster_name = 'default'
-    else:
-        cluster_name = cluster[:MAX_CHAR_LENGTH]
-
-    return cluster_name + '-' + service[:MAX_CHAR_LENGTH]
+    cluster_name = 'default' if cluster is None else cluster[:MAX_CHAR_LENGTH]
+    return f'{cluster_name}-{service[:MAX_CHAR_LENGTH]}'
 
 
 def parse_appspec(appspec_str):

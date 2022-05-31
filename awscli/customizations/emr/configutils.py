@@ -41,9 +41,7 @@ def _get_profile_str(session, separator):
 
 def is_any_role_configured(session):
     parsed_configs = get_configs(session)
-    return True if ('instance_profile' in parsed_configs or
-                    'service_role' in parsed_configs) \
-        else False
+    return 'instance_profile' in parsed_configs or 'service_role' in parsed_configs
 
 
 def update_roles(session):

@@ -77,11 +77,13 @@ def unpack_argument(session, service_name, operation_name, cli_argument, value):
     param_name = getattr(cli_argument, 'name', 'anonymous')
 
     value_override = session.emit_first_non_none_response(
-        'load-cli-arg.%s.%s.%s' % (service_name,
-                                   operation_name,
-                                   param_name),
-        param=cli_argument, value=value, service_name=service_name,
-        operation_name=operation_name)
+        f'load-cli-arg.{service_name}.{operation_name}.{param_name}',
+        param=cli_argument,
+        value=value,
+        service_name=service_name,
+        operation_name=operation_name,
+    )
+
 
     if value_override is not None:
         value = value_override
@@ -114,14 +116,14 @@ def _detect_shape_structure(param, stack):
             elif len(sub_types) > 1 and all(p == 'scalar' for p in sub_types):
                 return 'structure(scalars)'
             else:
-                return 'structure(%s)' % ', '.join(sorted(set(sub_types)))
+                return f"structure({', '.join(sorted(set(sub_types)))})"
         elif param.type_name == 'list':
-            return 'list-%s' % _detect_shape_structure(param.member, stack)
+            return f'list-{_detect_shape_structure(param.member, stack)}'
         elif param.type_name == 'map':
             if param.value.type_name in SCALAR_TYPES:
                 return 'map-scalar'
             else:
-                return 'map-%s' % _detect_shape_structure(param.value, stack)
+                return f'map-{_detect_shape_structure(param.value, stack)}'
     finally:
         stack.pop()
 
@@ -148,11 +150,11 @@ def unpack_cli_arg(cli_argument, value):
 
 def _special_type(model):
     # check if model is jsonvalue header and that value is serializable
-    if model.serialization.get('jsonvalue') and \
-       model.serialization.get('location') == 'header' and \
-       model.type_name == 'string':
-        return True
-    return False
+    return bool(
+        model.serialization.get('jsonvalue')
+        and model.serialization.get('location') == 'header'
+        and model.type_name == 'string'
+    )
 
 
 def _unpack_cli_arg(argument_model, value, cli_name):
@@ -180,7 +182,7 @@ def _unpack_json_cli_arg(argument_model, value, cli_name):
 
 def _unpack_complex_cli_arg(argument_model, value, cli_name):
     type_name = argument_model.type_name
-    if type_name == 'structure' or type_name == 'map':
+    if type_name in ['structure', 'map']:
         if value.lstrip()[0] == '{':
             return _unpack_json_cli_arg(argument_model, value, cli_name)
         raise ParamError(cli_name, "Invalid JSON:\n%s" % value)
@@ -212,9 +214,9 @@ def _unpack_complex_cli_arg(argument_model, value, cli_name):
 def unpack_scalar_cli_arg(argument_model, value, cli_name=''):
     # Note the cli_name is used strictly for error reporting.  It's
     # not required to use unpack_scalar_cli_arg
-    if argument_model.type_name == 'integer' or argument_model.type_name == 'long':
+    if argument_model.type_name in ['integer', 'long']:
         return int(value)
-    elif argument_model.type_name == 'float' or argument_model.type_name == 'double':
+    elif argument_model.type_name in ['float', 'double']:
         # TODO: losing precision on double types
         return float(value)
     elif argument_model.type_name == 'blob' and \
@@ -243,9 +245,7 @@ def _supports_shorthand_syntax(model):
     # 2. The argument is sufficiently complex, that is, it's base type is
     # a complex type *and* if it's a list, then it can't be a list of
     # scalar types.
-    if is_document_type_container(model):
-        return False
-    return _is_complex_shape(model)
+    return False if is_document_type_container(model) else _is_complex_shape(model)
 
 
 def _is_complex_shape(model):
@@ -321,11 +321,10 @@ class ParamShorthandParser(ParamShorthand):
 
         if not self._should_parse_as_shorthand(cli_argument, value):
             return
-        else:
-            service_id, operation_name = \
-                find_service_and_method_in_event_name(event_name)
-            return self._parse_as_shorthand(
-                cli_argument, value, service_id, operation_name)
+        service_id, operation_name = \
+            find_service_and_method_in_event_name(event_name)
+        return self._parse_as_shorthand(
+            cli_argument, value, service_id, operation_name)
 
     def _parse_as_shorthand(self, cli_argument, value, service_id,
                             operation_name):
@@ -343,11 +342,10 @@ class ParamShorthandParser(ParamShorthand):
                 # this happens we need to parse each list element
                 # individually.
                 parsed = [self._parser.parse(v) for v in value]
-                self._visitor.visit(parsed, cli_argument.argument_model)
             else:
                 # Otherwise value is just a string.
                 parsed = self._parser.parse(value)
-                self._visitor.visit(parsed, cli_argument.argument_model)
+            self._visitor.visit(parsed, cli_argument.argument_model)
         except shorthand.ShorthandParseError as e:
             raise ParamError(cli_argument.cli_name, str(e))
         except (ParamError, ParamUnknownKeyError) as e:
@@ -377,8 +375,7 @@ class ParamShorthandParser(ParamShorthand):
             # [{"InstanceId": "id-1"}, {"InstanceId": "id-2"},
             #  {"InstanceId": "id-3"}]
             key_name = list(model.member.members.keys())[0]
-            new_values = [{key_name: v} for v in value]
-            return new_values
+            return [{key_name: v} for v in value]
         elif model.type_name == 'structure' and \
                 len(model.members) == 1 and \
                 'Value' in model.members and \
@@ -397,10 +394,7 @@ class ParamShorthandParser(ParamShorthand):
         # We first need to make sure this is a parameter that qualifies
         # for simplification.  The first short-circuit case is if it looks
         # like json we immediately return.
-        if value and isinstance(value, list):
-            check_val = value[0]
-        else:
-            check_val = value
+        check_val = value[0] if value and isinstance(value, list) else value
         if isinstance(check_val, six.string_types) and check_val.strip().startswith(
                 ('[', '{')):
             LOG.debug("Param %s looks like JSON, not considered for "
@@ -448,11 +442,10 @@ class ParamShorthandDocGen(ParamShorthand):
         # syntax.
         stack = []
         try:
-            if cli_argument.argument_model.type_name == 'list':
-                argument_model = cli_argument.argument_model.member
-                return self._shorthand_docs(argument_model, stack) + ' ...'
-            else:
+            if cli_argument.argument_model.type_name != 'list':
                 return self._shorthand_docs(cli_argument.argument_model, stack)
+            argument_model = cli_argument.argument_model.member
+            return f'{self._shorthand_docs(argument_model, stack)} ...'
         except TooComplexError:
             return ''
 
@@ -467,9 +460,8 @@ class ParamShorthandDocGen(ParamShorthand):
             # Handle special case where the min/max is exactly one.
             metadata = model.metadata
             if metadata.get('min') == 1 and metadata.get('max') == 1:
-                return '%s %s1' % (cli_argument.cli_name, member_name)
-            return '%s %s1 %s2 %s3' % (cli_argument.cli_name, member_name,
-                                       member_name, member_name)
+                return f'{cli_argument.cli_name} {member_name}1'
+            return f'{cli_argument.cli_name} {member_name}1 {member_name}2 {member_name}3'
         elif model.type_name == 'structure' and \
                 len(model.members) == 1 and \
                 'Value' in model.members and \
@@ -497,14 +489,14 @@ class ParamShorthandDocGen(ParamShorthand):
         finally:
             stack.pop()
         if list_member.type_name in COMPLEX_TYPES or len(stack) > 1:
-            return '[%s,%s]' % (element_docs, element_docs)
+            return f'[{element_docs},{element_docs}]'
         else:
-            return '%s,%s' % (element_docs, element_docs)
+            return f'{element_docs},{element_docs}'
 
     def _map_docs(self, argument_model, stack):
         k = argument_model.key
         value_docs = self._shorthand_docs(argument_model.value, stack)
-        start = 'KeyName1=%s,KeyName2=%s' % (value_docs, value_docs)
+        start = f'KeyName1={value_docs},KeyName2={value_docs}'
         if k.enum and not stack:
             start += '\n\nWhere valid key names are:\n'
             for enum in k.enum:
@@ -514,11 +506,12 @@ class ParamShorthandDocGen(ParamShorthand):
         return start
 
     def _structure_docs(self, argument_model, stack):
-        parts = []
-        for name, member_shape in argument_model.members.items():
-            if is_document_type_container(member_shape):
-                continue
-            parts.append(self._member_docs(name, member_shape, stack))
+        parts = [
+            self._member_docs(name, member_shape, stack)
+            for name, member_shape in argument_model.members.items()
+            if not is_document_type_container(member_shape)
+        ]
+
         inner_part = ','.join(parts)
         if not stack:
             return inner_part
@@ -532,4 +525,4 @@ class ParamShorthandDocGen(ParamShorthand):
             value_doc = self._shorthand_docs(shape, stack)
         finally:
             stack.pop()
-        return '%s=%s' % (name, value_doc)
+        return f'{name}={value_doc}'

@@ -18,7 +18,7 @@ class TestPutRecordBatch(BaseAWSCommandParamsTest):
     prefix = 'firehose put-record-batch'
 
     def test_shorthand(self):
-        command = self.prefix + ' --delivery-stream-name foo'
+        command = f'{self.prefix} --delivery-stream-name foo'
         command += ' --records foo bar'
         params = {
             'DeliveryStreamName': 'foo',

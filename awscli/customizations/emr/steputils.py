@@ -137,9 +137,7 @@ def _build_hive_args(args, release_label, region):
     args_list.append(constants.RUN_HIVE_SCRIPT)
 
     if not release_label:
-        args_list.append(constants.HIVE_VERSIONS)
-        args_list.append(constants.LATEST)
-
+        args_list.extend((constants.HIVE_VERSIONS, constants.LATEST))
     args_list.append(constants.ARGS)
     args_list += args
 
@@ -176,9 +174,7 @@ def _build_pig_args(args, release_label, region):
     args_list.append(constants.RUN_PIG_SCRIPT)
 
     if not release_label:
-        args_list.append(constants.PIG_VERSIONS)
-        args_list.append(constants.LATEST)
-
+        args_list.extend((constants.PIG_VERSIONS, constants.LATEST))
     args_list.append(constants.ARGS)
     args_list += args
 

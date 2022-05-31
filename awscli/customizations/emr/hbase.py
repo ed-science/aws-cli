@@ -32,7 +32,6 @@ class RestoreFromHBaseBackup(Command):
     ]
 
     def _run_main_command(self, parsed_args, parsed_globals):
-        steps = []
         args = hbaseutils.build_hbase_restore_from_backup_args(
             parsed_args.dir, parsed_args.backup_version)
 
@@ -42,7 +41,7 @@ class RestoreFromHBaseBackup(Command):
             action_on_failure=constants.CANCEL_AND_WAIT,
             args=args)
 
-        steps.append(step_config)
+        steps = [step_config]
         parameters = {'JobFlowId': parsed_args.cluster_id,
                       'Steps': steps}
         emrutils.call_and_display_response(self._session, 'AddJobFlowSteps',
@@ -78,7 +77,6 @@ class ScheduleHBaseBackup(Command):
     ]
 
     def _run_main_command(self, parsed_args, parsed_globals):
-        steps = []
         self._check_type(parsed_args.type)
         self._check_unit(parsed_args.unit)
         args = self._build_hbase_schedule_backup_args(parsed_args)
@@ -89,7 +87,7 @@ class ScheduleHBaseBackup(Command):
             action_on_failure=constants.CANCEL_AND_WAIT,
             args=args)
 
-        steps.append(step_config)
+        steps = [step_config]
         parameters = {'JobFlowId': parsed_args.cluster_id,
                       'Steps': steps}
         emrutils.call_and_display_response(self._session, 'AddJobFlowSteps',
@@ -98,7 +96,7 @@ class ScheduleHBaseBackup(Command):
 
     def _check_type(self, type):
         type = type.lower()
-        if type != constants.FULL and type != constants.INCREMENTAL:
+        if type not in [constants.FULL, constants.INCREMENTAL]:
             raise ValueError('aws: error: invalid type. '
                              'type should be either ' +
                              constants.FULL + ' or ' + constants.INCREMENTAL +
@@ -106,9 +104,7 @@ class ScheduleHBaseBackup(Command):
 
     def _check_unit(self, unit):
         unit = unit.lower()
-        if (unit != constants.MINUTES and
-                unit != constants.HOURS and
-                unit != constants.DAYS):
+        if unit not in [constants.MINUTES, constants.HOURS, constants.DAYS]:
             raise ValueError('aws: error: invalid unit. unit should be one of'
                              ' the following values: ' + constants.MINUTES +
                              ', ' + constants.HOURS + ' or ' + constants.DAYS +
@@ -136,9 +132,7 @@ class ScheduleHBaseBackup(Command):
         else:
             args.append(constants.HBASE_INCREMENTAL_BACKUP_INTERVAL_UNIT)
 
-        args.append(unit)
-        args.append(constants.HBASE_BACKUP_STARTTIME)
-
+        args.extend((unit, constants.HBASE_BACKUP_STARTTIME))
         if parsed_args.start_time is not None:
             args.append(parsed_args.start_time)
         else:
@@ -163,7 +157,6 @@ class CreateHBaseBackup(Command):
     ]
 
     def _run_main_command(self, parsed_args, parsed_globals):
-        steps = []
         args = self._build_hbase_backup_args(parsed_args)
 
         step_config = emrutils.build_step(
@@ -172,7 +165,7 @@ class CreateHBaseBackup(Command):
             action_on_failure=constants.CANCEL_AND_WAIT,
             args=args)
 
-        steps.append(step_config)
+        steps = [step_config]
         parameters = {'JobFlowId': parsed_args.cluster_id,
                       'Steps': steps}
         emrutils.call_and_display_response(self._session, 'AddJobFlowSteps',
@@ -204,8 +197,6 @@ class DisableHBaseBackups(Command):
     ]
 
     def _run_main_command(self, parsed_args, parsed_globals):
-        steps = []
-
         args = self._build_hbase_disable_backups_args(parsed_args)
 
         step_config = emrutils.build_step(
@@ -214,7 +205,7 @@ class DisableHBaseBackups(Command):
             constants.CANCEL_AND_WAIT,
             args)
 
-        steps.append(step_config)
+        steps = [step_config]
         parameters = {'JobFlowId': parsed_args.cluster_id,
                       'Steps': steps}
         emrutils.call_and_display_response(self._session, 'AddJobFlowSteps',

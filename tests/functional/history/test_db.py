@@ -167,8 +167,8 @@ class TestDatabaseRecordWriter(BaseDatabaseTest):
                 record[col_name] = json.loads(record[col_name])
                 self.assertEqual(record[col_name], row_value)
 
-        self.assertTrue('id' in record.keys())
-        self.assertTrue('request_id' in record.keys())
+        self.assertTrue('id' in record)
+        self.assertTrue('request_id' in record)
 
     def test_can_write_many_records(self):
         writer = DatabaseRecordWriter(connection=self.connection)
@@ -197,12 +197,12 @@ class TestDatabaseRecordReader(BaseDatabaseTest):
 
     def test_yields_nothing_if_no_matching_record_id(self):
         reader = DatabaseRecordReader(self.connection)
-        records = [record for record in reader.iter_records('fake_id')]
+        records = list(reader.iter_records('fake_id'))
         self.assertEqual(len(records), 0)
 
     def test_yields_nothing_no_recent_records(self):
         reader = DatabaseRecordReader(self.connection)
-        records = [record for record in reader.iter_latest_records()]
+        records = list(reader.iter_latest_records())
         self.assertEqual(len(records), 0)
 
     def test_can_read_record(self):
@@ -254,7 +254,7 @@ class TestDatabaseRecordReader(BaseDatabaseTest):
         # This should select only the three records from writer_a since we
         # are explicitly looking for the records that match the id of the
         # foo event record.
-        records = [record for record in reader.iter_records(identifier)]
+        records = list(reader.iter_records(identifier))
         self.assertEqual(len(records), 3)
         for record in records:
             record_id = record['id']
@@ -293,9 +293,9 @@ class TestDatabaseRecordReader(BaseDatabaseTest):
         # recent, so when we call get_latest_records we should get the
         # foo and bar records only.
         reader = DatabaseRecordReader(self.connection)
-        records = set([record['event_type'] for record
-                       in reader.iter_latest_records()])
-        self.assertEqual(set(['foo', 'bar']), records)
+        records = {record['event_type'] for record in reader.iter_latest_records()}
+
+        self.assertEqual({'foo', 'bar'}, records)
 
 
 class TestDatabaseHistoryHandler(unittest.TestCase):
@@ -312,8 +312,7 @@ class TestDatabaseHistoryHandler(unittest.TestCase):
             writer=self.writer, record_builder=self.record_builder)
 
     def _get_last_record(self):
-        record = self.db.execute('SELECT * FROM records').fetchone()
-        return record
+        return self.db.execute('SELECT * FROM records').fetchone()
 
     def _assert_expected_event_type(self, source, record):
         self.assertEqual(source, record[3])

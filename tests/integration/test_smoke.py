@@ -152,7 +152,7 @@ ERROR_MESSAGE_RE = re.compile(
     ERROR_COMMANDS
 )
 def test_display_error_message(cmd):
-    identifier = 'foo-awscli-test-%s' % random.randint(1000, 100000)
+    identifier = f'foo-awscli-test-{random.randint(1000, 100000)}'
     command_string = cmd % identifier
     result = _aws(command_string, target_rc=255)
     assert result.rc == 255

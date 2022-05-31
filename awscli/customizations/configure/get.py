@@ -50,7 +50,7 @@ class ConfigureGetCommand(BasicCommand):
         else:
             value = self._get_dotted_config_value(varname)
 
-        LOG.debug(u'Config value retrieved: %s' % value)
+        LOG.debug(f'Config value retrieved: {value}')
 
         if isinstance(value, six.string_types):
             self._stream.write(value)

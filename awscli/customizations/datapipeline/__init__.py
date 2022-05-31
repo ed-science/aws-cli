@@ -209,8 +209,7 @@ class QueryArgBuilder(object):
             self._build_schedule_times(selectors, parsed_args)
         if parsed_args.status is not None:
             self._build_status(selectors, parsed_args)
-        query = {'selectors': selectors}
-        return query
+        return {'selectors': selectors}
 
     def _build_schedule_times(self, selectors, parsed_args):
         if parsed_args.start_interval is not None:
@@ -313,9 +312,7 @@ class ParameterValuesInlineArgument(CustomArgument):
                 else:
                     parameter_object[key] = value
             except IndexError:
-                raise ParameterDefinitionError(
-                    "Invalid inline parameter format: %s" % argument
-                )
+                raise ParameterDefinitionError(f"Invalid inline parameter format: {argument}")
         parsed = {'values': parameter_object}
         parameter_values = translator.definition_to_parameter_values(parsed)
         parameters['parameterValues'] = parameter_values
@@ -388,8 +385,9 @@ class ListRunsCommand(BasicCommand):
     def _validate_status_choices(self, statuses):
         for status in statuses:
             if status not in self.VALID_STATUS:
-                raise ValueError("Invalid status: %s, must be one of: %s" %
-                                 (status, ', '.join(self.VALID_STATUS)))
+                raise ValueError(
+                    f"Invalid status: {status}, must be one of: {', '.join(self.VALID_STATUS)}"
+                )
 
     def _list_runs(self, parsed_args, parsed_globals):
         query = QueryArgBuilder().build_query(parsed_args)

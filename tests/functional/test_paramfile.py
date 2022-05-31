@@ -35,7 +35,7 @@ class BaseTestCLIFollowParamURL(BaseAWSCommandParamsTest):
         self.files.remove_all()
 
     def assert_param_expansion_is_correct(self, provided_param, expected_param):
-        cmd = '%s %s' % (self.prefix, provided_param)
+        cmd = f'{self.prefix} {provided_param}'
         # We do not care about the return code here. All that is of interest
         # is what happened to the arguments before they were passed to botocore
         # which we get from the params={} key. For binary types we will fail in
@@ -75,7 +75,7 @@ class TestCLIFollowParamURLDefault(BaseTestCLIFollowParamURL):
 
     def test_does_use_file_prefix(self):
         path = self.files.create_file('foobar.txt', 'file content')
-        param = 'file://%s' % path
+        param = f'file://{path}'
         self.assert_param_expansion_is_correct(
             provided_param=param,
             expected_param='file content'
@@ -86,7 +86,7 @@ class TestCLIFollowParamURLDefault(BaseTestCLIFollowParamURL):
         # not work for this parameter, however we still record the raw
         # parameter that we passed, which is all this test is concerend about.
         path = self.files.create_file('foobar.txt', b'file content', mode='wb')
-        param = 'fileb://%s' % path
+        param = f'fileb://{path}'
         self.assert_param_expansion_is_correct(
             provided_param=param,
             expected_param=b'file content'
@@ -128,7 +128,7 @@ class TestCLIFollowParamURLDisabled(BaseTestCLIFollowParamURL):
 
     def test_does_use_file_prefix(self):
         path = self.files.create_file('foobar.txt', 'file content')
-        param = 'file://%s' % path
+        param = f'file://{path}'
         self.assert_param_expansion_is_correct(
             provided_param=param,
             expected_param='file content'
@@ -139,7 +139,7 @@ class TestCLIFollowParamURLDisabled(BaseTestCLIFollowParamURL):
         # not work for this parameter, however we still record the raw
         # parameter that we passed, which is all this test is concerend about.
         path = self.files.create_file('foobar.txt', b'file content', mode='wb')
-        param = 'fileb://%s' % path
+        param = f'fileb://{path}'
         self.assert_param_expansion_is_correct(
             provided_param=param,
             expected_param=b'file content'
@@ -179,7 +179,7 @@ class TestCLIFollowParamURLEnabled(BaseTestCLIFollowParamURL):
 
     def test_does_use_file_prefix(self):
         path = self.files.create_file('foobar.txt', 'file content')
-        param = 'file://%s' % path
+        param = f'file://{path}'
         self.assert_param_expansion_is_correct(
             provided_param=param,
             expected_param='file content'
@@ -190,7 +190,7 @@ class TestCLIFollowParamURLEnabled(BaseTestCLIFollowParamURL):
         # not work for this parameter, however we still record the raw
         # parameter that we passed, which is all this test is concerend about.
         path = self.files.create_file('foobar.txt', b'file content', mode='wb')
-        param = 'fileb://%s' % path
+        param = f'fileb://{path}'
         self.assert_param_expansion_is_correct(
             provided_param=param,
             expected_param=b'file content'

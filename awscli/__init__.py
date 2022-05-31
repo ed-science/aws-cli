@@ -15,6 +15,7 @@ AWSCLI
 ----
 A Universal Command Line Environment for Amazon Web Services.
 """
+
 import os
 
 __version__ = '1.24.10'
@@ -40,8 +41,15 @@ EnvironmentVariables = {
 }
 
 
-SCALAR_TYPES = set([
-    'string', 'float', 'integer', 'long', 'boolean', 'double',
-    'blob', 'timestamp'
-])
-COMPLEX_TYPES = set(['structure', 'map', 'list'])
+SCALAR_TYPES = {
+    'string',
+    'float',
+    'integer',
+    'long',
+    'boolean',
+    'double',
+    'blob',
+    'timestamp',
+}
+
+COMPLEX_TYPES = {'structure', 'map', 'list'}

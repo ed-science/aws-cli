@@ -18,7 +18,7 @@ class TestDeregisterInstancesFromLoadBalancer(BaseAWSCommandParamsTest):
     prefix = 'elb deregister-instances-from-load-balancer'
 
     def test_shorthand(self):
-        command = self.prefix + ' --load-balancer-name foo'
+        command = f'{self.prefix} --load-balancer-name foo'
         command += ' --instances id1 id2 id3'
         expected_params = {
             'LoadBalancerName': 'foo',

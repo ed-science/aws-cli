@@ -115,8 +115,10 @@ class TestCloudTrailCommand(BaseCloudTrailCommandTest):
         _setup_mock_traverser(self._mock_traverser, key_provider,
                               digest_provider, validator)
         stdout, stderr, rc = self.run_cmd(
-            "cloudtrail validate-logs --trail-arn %s --start-time %s --verbose"
-            % (TEST_TRAIL_ARN, START_TIME_ARG), 0)
+            f"cloudtrail validate-logs --trail-arn {TEST_TRAIL_ARN} --start-time {START_TIME_ARG} --verbose",
+            0,
+        )
+
         self.assertIn('Digest file\ts3://1/%s\tvalid'
                       % digest_provider.digests[0], stdout)
 
@@ -126,8 +128,10 @@ class TestCloudTrailCommand(BaseCloudTrailCommandTest):
         _setup_mock_traverser(self._mock_traverser, key_provider,
                               digest_provider, validator)
         stdout, stderr, rc = self.run_cmd(
-            "cloudtrail validate-logs --trail-arn %s --start-time %s --verbose"
-            % (TEST_TRAIL_ARN, START_TIME_ARG), 1)
+            f"cloudtrail validate-logs --trail-arn {TEST_TRAIL_ARN} --start-time {START_TIME_ARG} --verbose",
+            1,
+        )
+
         self.assertIn('Digest file\ts3://1/%s\tINVALID: not found'
                       % digest_provider.digests[1], stderr)
         self.assertIn('Digest file\ts3://1/%s\tINVALID: not found'
@@ -150,12 +154,15 @@ class TestCloudTrailCommand(BaseCloudTrailCommandTest):
         _setup_mock_traverser(self._mock_traverser, key_provider,
                               digest_provider, validator)
         stdout, stderr, rc = self.run_cmd(
-            "cloudtrail validate-logs --trail-arn %s --start-time %s"
-            % (TEST_TRAIL_ARN, START_TIME_ARG), 1)
+            f"cloudtrail validate-logs --trail-arn {TEST_TRAIL_ARN} --start-time {START_TIME_ARG}",
+            1,
+        )
+
         self.assertIn('invalid error', stderr)
         self.assertIn(
-            'Results requested for %s to ' % format_display_date(START_DATE),
-            stdout)
+            f'Results requested for {format_display_date(START_DATE)} to ', stdout
+        )
+
         self.assertIn('2/3 digest files valid, 1/3 digest files INVALID',
                       stdout)
 
@@ -249,8 +256,10 @@ class TestCloudTrailCommand(BaseCloudTrailCommandTest):
         _setup_mock_traverser(self._mock_traverser, key_provider,
                               digest_provider, validator)
         stdout, stderr, rc = self.run_cmd(
-            "cloudtrail validate-logs --trail-arn %s --start-time %s --verbose"
-            % (TEST_TRAIL_ARN, START_TIME_ARG), 0)
+            f"cloudtrail validate-logs --trail-arn {TEST_TRAIL_ARN} --start-time {START_TIME_ARG} --verbose",
+            0,
+        )
+
         self.assertIn('s3://1/key1', stdout)
         self.assertIn('s3://1/key2', stdout)
         self.assertIn('s3://1/key3', stdout)
@@ -262,7 +271,7 @@ class TestCloudTrailCommand(BaseCloudTrailCommandTest):
         self.assertIn('start-time must occur before end-time', stderr)
 
     def test_fails_when_digest_not_from_same_location_as_json_contents(self):
-        key_name = END_TIME_ARG + '.json.gz'
+        key_name = f'{END_TIME_ARG}.json.gz'
         digest = {'digestPublicKeyFingerprint': 'a',
                   'digestS3Bucket': 'not_same',
                   'digestS3Object': key_name,
@@ -275,8 +284,10 @@ class TestCloudTrailCommand(BaseCloudTrailCommandTest):
         _setup_mock_traverser(self._mock_traverser, mock.Mock(),
                               digest_provider, mock.Mock())
         stdout, stderr, rc = self.run_cmd(
-            "cloudtrail validate-logs --trail-arn %s --start-time %s"
-            % (TEST_TRAIL_ARN, START_TIME_ARG), 1)
+            f"cloudtrail validate-logs --trail-arn {TEST_TRAIL_ARN} --start-time {START_TIME_ARG}",
+            1,
+        )
+
         self.assertIn(
             ('Digest file\ts3://1/%s\tINVALID: has been moved from its '
              'original location' % key_name), stderr)
@@ -284,14 +295,16 @@ class TestCloudTrailCommand(BaseCloudTrailCommandTest):
     def test_fails_when_digest_is_missing_keys_before_validation(self):
         digest = {}
         digest_provider = mock.Mock()
-        key_name = END_TIME_ARG + '.json.gz'
+        key_name = f'{END_TIME_ARG}.json.gz'
         digest_provider.load_digest_keys_in_range.return_value = [key_name]
         digest_provider.fetch_digest.return_value = (digest, key_name)
         _setup_mock_traverser(self._mock_traverser, mock.Mock(),
                               digest_provider, mock.Mock())
         stdout, stderr, rc = self.run_cmd(
-            "cloudtrail validate-logs --trail-arn %s --start-time %s"
-            % (TEST_TRAIL_ARN, START_TIME_ARG), 1)
+            f"cloudtrail validate-logs --trail-arn {TEST_TRAIL_ARN} --start-time {START_TIME_ARG}",
+            1,
+        )
+
         self.assertIn(
             'Digest file\ts3://1/%s\tINVALID: invalid format' % key_name,
             stderr)

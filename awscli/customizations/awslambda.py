@@ -133,7 +133,7 @@ class ReplacedZipFileArgument(CLIArgument):
     """
     def __init__(self, *args, **kwargs):
         super(ReplacedZipFileArgument, self).__init__(*args, **kwargs)
-        self._cli_name = '--%s' % kwargs['name']
+        self._cli_name = f"--{kwargs['name']}"
         self._param_to_replace = kwargs['serialized_name']
 
     def add_to_params(self, parameters, value):

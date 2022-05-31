@@ -143,7 +143,7 @@ class UploadResultSubscriber(BaseResultSubscriber):
     def _get_src_dest(self, future):
         call_args = future.meta.call_args
         src = self._get_src(call_args.fileobj)
-        dest = 's3://' + call_args.bucket + '/' + call_args.key
+        dest = f's3://{call_args.bucket}/{call_args.key}'
         return src, dest
 
     def _get_src(self, fileobj):
@@ -160,7 +160,7 @@ class DownloadResultSubscriber(BaseResultSubscriber):
 
     def _get_src_dest(self, future):
         call_args = future.meta.call_args
-        src = 's3://' + call_args.bucket + '/' + call_args.key
+        src = f's3://{call_args.bucket}/{call_args.key}'
         dest = self._get_dest(call_args.fileobj)
         return src, dest
 
@@ -180,7 +180,7 @@ class CopyResultSubscriber(BaseResultSubscriber):
         call_args = future.meta.call_args
         copy_source = call_args.copy_source
         src = 's3://' + copy_source['Bucket'] + '/' + copy_source['Key']
-        dest = 's3://' + call_args.bucket + '/' + call_args.key
+        dest = f's3://{call_args.bucket}/{call_args.key}'
         return src, dest
 
 
@@ -189,7 +189,7 @@ class DeleteResultSubscriber(BaseResultSubscriber):
 
     def _get_src_dest(self, future):
         call_args = future.meta.call_args
-        src = 's3://' + call_args.bucket + '/' + call_args.key
+        src = f's3://{call_args.bucket}/{call_args.key}'
         return src, None
 
 
@@ -246,10 +246,12 @@ class ResultRecorder(BaseResultHandler):
                 'Any result using _get_ongoing_dict_key must subclass from '
                 'BaseResult. Provided result is of type: %s' % type(result)
             )
-        key_parts = []
-        for result_property in [result.transfer_type, result.src, result.dest]:
-            if result_property is not None:
-                key_parts.append(ensure_text_type(result_property))
+        key_parts = [
+            ensure_text_type(result_property)
+            for result_property in [result.transfer_type, result.src, result.dest]
+            if result_property is not None
+        ]
+
         return u':'.join(key_parts)
 
     def _pop_result_from_ongoing_dicts(self, result):
@@ -527,10 +529,13 @@ class ResultPrinter(BaseResultHandler):
         self._print_to_out_file(progress_statement)
 
     def _get_expected_total(self, expected_total):
-        if not self._result_recorder.expected_totals_are_final():
-            return self._ESTIMATED_EXPECTED_TOTAL.format(
-                expected_total=expected_total)
-        return expected_total
+        return (
+            expected_total
+            if self._result_recorder.expected_totals_are_final()
+            else self._ESTIMATED_EXPECTED_TOTAL.format(
+                expected_total=expected_total
+            )
+        )
 
     def _adjust_statement_padding(self, print_statement, ending_char='\n'):
         print_statement = print_statement.ljust(self._progress_length, ' ')

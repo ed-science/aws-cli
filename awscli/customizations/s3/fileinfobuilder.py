@@ -29,22 +29,22 @@ class FileInfoBuilder(object):
 
     def call(self, files):
         for file_base in files:
-            file_info = self._inject_info(file_base)
-            yield file_info
+            yield self._inject_info(file_base)
 
     def _inject_info(self, file_base):
-        file_info_attr = {}
-        file_info_attr['src'] = file_base.src
-        file_info_attr['dest'] = file_base.dest
-        file_info_attr['compare_key'] = file_base.compare_key
-        file_info_attr['size'] = file_base.size
-        file_info_attr['last_update'] = file_base.last_update
-        file_info_attr['src_type'] = file_base.src_type
-        file_info_attr['dest_type'] = file_base.dest_type
-        file_info_attr['operation_name'] = file_base.operation_name
-        file_info_attr['parameters'] = self._parameters
-        file_info_attr['is_stream'] = self._is_stream
-        file_info_attr['associated_response_data'] = file_base.response_data
+        file_info_attr = {
+            'src': file_base.src,
+            'dest': file_base.dest,
+            'compare_key': file_base.compare_key,
+            'size': file_base.size,
+            'last_update': file_base.last_update,
+            'src_type': file_base.src_type,
+            'dest_type': file_base.dest_type,
+            'operation_name': file_base.operation_name,
+            'parameters': self._parameters,
+            'is_stream': self._is_stream,
+            'associated_response_data': file_base.response_data,
+        }
 
         # This is a bit quirky. The below conditional hinges on the --delete
         # flag being set, which only occurs during a sync command. The source

@@ -103,8 +103,7 @@ def _all_commands():
     _all_commands()
 )
 def test_can_generate_skeletons_for_all_service_comands(command_name, operation_name):
-    command = '%s %s --generate-cli-skeleton' % (command_name,
-                                                 operation_name)
+    command = f'{command_name} {operation_name} --generate-cli-skeleton'
     stdout, stderr, _ = _run_cmd(command)
     # Test that a valid JSON blob is emitted to stdout is valid.
     try:
@@ -125,11 +124,7 @@ def _run_cmd(cmd, expected_rc=0):
     # worth seeing if we can make drivers reusable to speed these up generated
     # tests.
     driver = create_clidriver()
-    if not isinstance(cmd, list):
-        cmdlist = cmd.split()
-    else:
-        cmdlist = cmd
-
+    cmdlist = cmd if isinstance(cmd, list) else cmd.split()
     with capture_output() as captured:
         try:
             rc = driver.main(cmdlist)

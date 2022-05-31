@@ -87,10 +87,18 @@ class CreateDefaultRoles(BasicCommand):
         role_policy_result = None
         # Check if the role with the name exists
         if self._check_if_role_exists(role_name):
-            LOG.debug('Role ' + role_name + ' exists.')
+            LOG.debug(f'Role {role_name} exists.')
         else:
-            LOG.debug('Role ' + role_name + ' does not exist.'
-                      ' Creating default role for EC2: ' + role_name)
+            LOG.debug(
+                (
+                    (
+                        f'Role {role_name}' + ' does not exist.'
+                        ' Creating default role for EC2: '
+                    )
+                    + role_name
+                )
+            )
+
             # Create a create using the IAM Client with a particular triplet
             # (role_name, role_arn, assume_role_policy)
             role_result = self._create_role_with_role_policy(role_name,
@@ -134,11 +142,18 @@ class CreateDefaultRoles(BasicCommand):
         # Check if the default EC2 Instance Profile for DataPipeline exists.
         instance_profile_name = DATAPIPELINE_DEFAULT_RESOURCE_ROLE_NAME
         if self._check_if_instance_profile_exists(instance_profile_name):
-            LOG.debug('Instance Profile ' + instance_profile_name + ' exists.')
+            LOG.debug(f'Instance Profile {instance_profile_name} exists.')
         else:
-            LOG.debug('Instance Profile ' + instance_profile_name +
-                      'does not exist. Creating default Instance Profile ' +
-                      instance_profile_name)
+            LOG.debug(
+                (
+                    (
+                        f'Instance Profile {instance_profile_name}'
+                        + 'does not exist. Creating default Instance Profile '
+                    )
+                    + instance_profile_name
+                )
+            )
+
             self._create_instance_profile_with_role(instance_profile_name,
                                                     instance_profile_name)
 

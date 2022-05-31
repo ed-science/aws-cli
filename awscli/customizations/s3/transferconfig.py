@@ -84,14 +84,15 @@ class RuntimeConfig(object):
             if value is not None:
                 try:
                     runtime_config[attr] = int(value)
-                    if not runtime_config[attr] > 0:
+                    if runtime_config[attr] <= 0:
                         self._error_positive_value(attr, value)
                 except ValueError:
                     self._error_positive_value(attr, value)
 
     def _error_positive_value(self, name, value):
         raise InvalidConfigError(
-            "Value for %s must be a positive integer: %s" % (name, value))
+            f"Value for {name} must be a positive integer: {value}"
+        )
 
 
 def create_transfer_config_from_runtime_config(runtime_config):
@@ -111,9 +112,10 @@ def create_transfer_config_from_runtime_config(runtime_config):
         'multipart_chunksize': 'multipart_chunksize',
         'max_bandwidth': 'max_bandwidth',
     }
-    kwargs = {}
-    for key, value in runtime_config.items():
-        if key not in translation_map:
-            continue
-        kwargs[translation_map[key]] = value
+    kwargs = {
+        translation_map[key]: value
+        for key, value in runtime_config.items()
+        if key in translation_map
+    }
+
     return TransferConfig(**kwargs)

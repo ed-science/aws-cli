@@ -67,7 +67,7 @@ class GenerateCliSkeletonArgument(OverrideRequiredArgsArgument):
         super(GenerateCliSkeletonArgument, self)._register_argument_action()
 
     def override_required_args(self, argument_table, args, **kwargs):
-        arg_name = '--' + self.name
+        arg_name = f'--{self.name}'
         if arg_name in args:
             arg_location = args.index(arg_name)
             try:
@@ -84,34 +84,35 @@ class GenerateCliSkeletonArgument(OverrideRequiredArgsArgument):
 
     def generate_json_skeleton(self, call_parameters, parsed_args,
                                parsed_globals, **kwargs):
-        if getattr(parsed_args, 'generate_cli_skeleton', None):
-            for_output = parsed_args.generate_cli_skeleton == 'output'
-            operation_model = self._operation_model
+        if not getattr(parsed_args, 'generate_cli_skeleton', None):
+            return
+        for_output = parsed_args.generate_cli_skeleton == 'output'
+        operation_model = self._operation_model
 
-            if for_output:
-                service_name = operation_model.service_model.service_name
-                operation_name = operation_model.name
-                # TODO: It would be better to abstract this logic into
-                # classes for both the input and output option such that
-                # a similar set of inputs are taken in and output
-                # similar functionality.
-                return StubbedCLIOperationCaller(self._session).invoke(
-                    service_name, operation_name, call_parameters,
-                    parsed_globals)
-            else:
-                argument_generator = ArgumentGenerator()
-                operation_input_shape = operation_model.input_shape
-                if operation_input_shape is None:
-                    skeleton = {}
-                else:
-                    skeleton = argument_generator.generate_skeleton(
-                        operation_input_shape)
+        if for_output:
+            service_name = operation_model.service_model.service_name
+            operation_name = operation_model.name
+            # TODO: It would be better to abstract this logic into
+            # classes for both the input and output option such that
+            # a similar set of inputs are taken in and output
+            # similar functionality.
+            return StubbedCLIOperationCaller(self._session).invoke(
+                service_name, operation_name, call_parameters,
+                parsed_globals)
+        else:
+            argument_generator = ArgumentGenerator()
+            operation_input_shape = operation_model.input_shape
+            skeleton = (
+                {}
+                if operation_input_shape is None
+                else argument_generator.generate_skeleton(operation_input_shape)
+            )
 
-                sys.stdout.write(
-                    json.dumps(skeleton, indent=4, default=json_encoder)
-                )
-                sys.stdout.write('\n')
-                return 0
+            sys.stdout.write(
+                json.dumps(skeleton, indent=4, default=json_encoder)
+            )
+            sys.stdout.write('\n')
+            return 0
 
 
 class StubbedCLIOperationCaller(CLIOperationCaller):

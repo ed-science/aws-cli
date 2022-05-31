@@ -44,7 +44,7 @@ def resolve_types(parsed_args, **kwargs):
 def _resolve_arg(parsed_args, name):
     value = getattr(parsed_args, name, None)
     if value is not None:
-        new_value = getattr(sys.modules[__name__], '_resolve_%s' % name)(value)
+        new_value = getattr(sys.modules[__name__], f'_resolve_{name}')(value)
         setattr(parsed_args, name, new_value)
 
 
@@ -52,7 +52,7 @@ def _resolve_query(value):
     try:
         return jmespath.compile(value)
     except Exception as e:
-        raise ValueError("Bad value for --query %s: %s" % (value, str(e)))
+        raise ValueError(f"Bad value for --query {value}: {str(e)}")
 
 
 def _resolve_endpoint_url(value):
@@ -73,12 +73,7 @@ def resolve_verify_ssl(parsed_args, session, **kwargs):
         verify = None
         # Only consider setting a custom ca_bundle if they
         # haven't provided --no-verify-ssl.
-        if not arg_value:
-            verify = False
-        else:
-            # in case if `ca_bundle` not in args it'll be retrieved
-            # from config on session.client creation step
-            verify = getattr(parsed_args, 'ca_bundle', None)
+        verify = getattr(parsed_args, 'ca_bundle', None) if arg_value else False
         setattr(parsed_args, arg_name, verify)
 
 

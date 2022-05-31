@@ -17,7 +17,7 @@ class TestPutConfigurationRecorder(BaseAWSCommandParamsTest):
     prefix = 'configservice put-configuration-recorder'
 
     def test_only_configuration_recorder(self):
-        cmdline = self.prefix + ' --configuration-recorder'
+        cmdline = f'{self.prefix} --configuration-recorder'
         cmdline += ' name=myrecorder,roleARN=myarn'
         result = {
             'ConfigurationRecorder': {
@@ -39,7 +39,7 @@ class TestPutConfigurationRecorder(BaseAWSCommandParamsTest):
         )
 
     def test_configuration_recorder_with_recording_group(self):
-        cmdline = self.prefix + ' --configuration-recorder'
+        cmdline = f'{self.prefix} --configuration-recorder'
         cmdline += ' name=myrecorder,roleARN=myarn'
         cmdline += ' --recording-group'
         cmdline += ' allSupported=true,resourceTypes='

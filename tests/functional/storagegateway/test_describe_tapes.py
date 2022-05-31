@@ -20,9 +20,11 @@ class TestDescribeTapes(BaseAWSCommandParamsTest):
     def test_accepts_old_argname(self):
         foo_arn = 'a' * 50
         bar_arn = 'b' * 50
-        cmdline = (
-            self.PREFIX + ' --gateway-arn %s --tape-ar-ns %s'
-        ) % (foo_arn, bar_arn)
+        cmdline = f'{self.PREFIX} --gateway-arn %s --tape-ar-ns %s' % (
+            foo_arn,
+            bar_arn,
+        )
+
         params = {
             'GatewayARN': foo_arn,
             'TapeARNs': [bar_arn],
@@ -32,9 +34,11 @@ class TestDescribeTapes(BaseAWSCommandParamsTest):
     def test_accepts_fixed_param_name(self):
         foo_arn = 'a' * 50
         bar_arn = 'b' * 50
-        cmdline = (
-            self.PREFIX + ' --gateway-arn %s --tape-arns %s'
-        ) % (foo_arn, bar_arn)
+        cmdline = f'{self.PREFIX} --gateway-arn %s --tape-arns %s' % (
+            foo_arn,
+            bar_arn,
+        )
+
         params = {
             'GatewayARN': foo_arn,
             'TapeARNs': [bar_arn],

@@ -92,8 +92,8 @@ class PayloadSerializer(json.JSONEncoder):
         if isinstance(obj, str):
             obj = self._try_decode_bytes(obj)
         elif isinstance(obj, dict):
-            obj = dict((k, self._remove_non_unicode_stings(v)) for k, v
-                       in obj.items())
+            obj = {k: self._remove_non_unicode_stings(v) for k, v in obj.items()}
+
         elif isinstance(obj, (list, tuple)):
             obj = [self._remove_non_unicode_stings(o) for o in obj]
         return obj
@@ -154,15 +154,14 @@ class DatabaseRecordWriter(object):
         event_type = record['event_type']
         json_serialized_payload = json.dumps(record['payload'],
                                              cls=PayloadSerializer)
-        db_record = (
+        return (
             record['command_id'],
             record.get('request_id'),
             record['source'],
             event_type,
             record['timestamp'],
-            json_serialized_payload
+            json_serialized_payload,
         )
-        return db_record
 
 
 class DatabaseRecordReader(object):
@@ -203,19 +202,13 @@ class DatabaseRecordReader(object):
         return d
 
     def iter_latest_records(self):
-        cursor = self._connection.execute(self._GET_LAST_ID_RECORDS)
-        for row in cursor:
-            yield row
+        yield from self._connection.execute(self._GET_LAST_ID_RECORDS)
 
     def iter_records(self, record_id):
-        cursor = self._connection.execute(self._GET_RECORDS_BY_ID, [record_id])
-        for row in cursor:
-            yield row
+        yield from self._connection.execute(self._GET_RECORDS_BY_ID, [record_id])
 
     def iter_all_records(self):
-        cursor = self._connection.execute(self._GET_ALL_RECORDS)
-        for row in cursor:
-            yield row
+        yield from self._connection.execute(self._GET_ALL_RECORDS)
 
 
 class RecordBuilder(object):
@@ -228,8 +221,7 @@ class RecordBuilder(object):
         self._locals = threading.local()
 
     def _get_current_thread_request_id(self):
-        request_id = getattr(self._locals, 'request_id', None)
-        return request_id
+        return getattr(self._locals, 'request_id', None)
 
     def _start_http_lifecycle(self):
         setattr(self._locals, 'request_id', str(uuid.uuid4()))
@@ -238,8 +230,7 @@ class RecordBuilder(object):
         if event_type == self._START_OF_REQUEST_LIFECYCLE_EVENT:
             self._start_http_lifecycle()
         if event_type in self._REQUEST_LIFECYCLE_EVENTS:
-            request_id = self._get_current_thread_request_id()
-            return request_id
+            return self._get_current_thread_request_id()
         return None
 
     def _get_identifier(self):
@@ -256,8 +247,7 @@ class RecordBuilder(object):
             'source': source,
             'timestamp': int(time.time() * 1000)
         }
-        request_id = self._get_request_id(event_type)
-        if request_id:
+        if request_id := self._get_request_id(event_type):
             record['request_id'] = request_id
         return record
 

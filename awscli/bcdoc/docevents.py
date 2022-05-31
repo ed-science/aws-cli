@@ -36,14 +36,25 @@ DOC_EVENTS = {
 
 def generate_events(session, help_command):
     # Now generate the documentation events
-    session.emit('doc-breadcrumbs.%s' % help_command.event_class,
-                 help_command=help_command)
-    session.emit('doc-title.%s' % help_command.event_class,
-                 help_command=help_command)
-    session.emit('doc-description.%s' % help_command.event_class,
-                 help_command=help_command)
-    session.emit('doc-synopsis-start.%s' % help_command.event_class,
-                 help_command=help_command)
+    session.emit(
+        f'doc-breadcrumbs.{help_command.event_class}',
+        help_command=help_command,
+    )
+
+    session.emit(
+        f'doc-title.{help_command.event_class}', help_command=help_command
+    )
+
+    session.emit(
+        f'doc-description.{help_command.event_class}',
+        help_command=help_command,
+    )
+
+    session.emit(
+        f'doc-synopsis-start.{help_command.event_class}',
+        help_command=help_command,
+    )
+
     if help_command.arg_table:
         for arg_name in help_command.arg_table:
             # An argument can set an '_UNDOCUMENTED' attribute
@@ -54,50 +65,86 @@ def generate_events(session, help_command):
                        '_UNDOCUMENTED', False):
                 continue
             session.emit(
-                'doc-synopsis-option.%s.%s' % (help_command.event_class,
-                                               arg_name),
-                arg_name=arg_name, help_command=help_command)
-    session.emit('doc-synopsis-end.%s' % help_command.event_class,
-                 help_command=help_command)
-    session.emit('doc-options-start.%s' % help_command.event_class,
-                 help_command=help_command)
+                f'doc-synopsis-option.{help_command.event_class}.{arg_name}',
+                arg_name=arg_name,
+                help_command=help_command,
+            )
+
+    session.emit(
+        f'doc-synopsis-end.{help_command.event_class}',
+        help_command=help_command,
+    )
+
+    session.emit(
+        f'doc-options-start.{help_command.event_class}',
+        help_command=help_command,
+    )
+
     if help_command.arg_table:
         for arg_name in help_command.arg_table:
             if getattr(help_command.arg_table[arg_name],
                        '_UNDOCUMENTED', False):
                 continue
-            session.emit('doc-option.%s.%s' % (help_command.event_class,
-                                               arg_name),
-                         arg_name=arg_name, help_command=help_command)
-            session.emit('doc-option-example.%s.%s' %
-                         (help_command.event_class, arg_name),
-                         arg_name=arg_name, help_command=help_command)
-    session.emit('doc-options-end.%s' % help_command.event_class,
-                 help_command=help_command)
-    session.emit('doc-subitems-start.%s' % help_command.event_class,
-                 help_command=help_command)
+            session.emit(
+                f'doc-option.{help_command.event_class}.{arg_name}',
+                arg_name=arg_name,
+                help_command=help_command,
+            )
+
+            session.emit(
+                f'doc-option-example.{help_command.event_class}.{arg_name}',
+                arg_name=arg_name,
+                help_command=help_command,
+            )
+
+    session.emit(
+        f'doc-options-end.{help_command.event_class}',
+        help_command=help_command,
+    )
+
+    session.emit(
+        f'doc-subitems-start.{help_command.event_class}',
+        help_command=help_command,
+    )
+
     if help_command.command_table:
         for command_name in sorted(help_command.command_table.keys()):
             if hasattr(help_command.command_table[command_name],
                        '_UNDOCUMENTED'):
                 continue
-            session.emit('doc-subitem.%s.%s'
-                         % (help_command.event_class, command_name),
-                         command_name=command_name,
-                         help_command=help_command)
-    session.emit('doc-subitems-end.%s' % help_command.event_class,
-                 help_command=help_command)
-    session.emit('doc-examples.%s' % help_command.event_class,
-                 help_command=help_command)
-    session.emit('doc-output.%s' % help_command.event_class,
-                 help_command=help_command)
-    session.emit('doc-relateditems-start.%s' % help_command.event_class,
-                 help_command=help_command)
+            session.emit(
+                f'doc-subitem.{help_command.event_class}.{command_name}',
+                command_name=command_name,
+                help_command=help_command,
+            )
+
+    session.emit(
+        f'doc-subitems-end.{help_command.event_class}',
+        help_command=help_command,
+    )
+
+    session.emit(
+        f'doc-examples.{help_command.event_class}', help_command=help_command
+    )
+
+    session.emit(
+        f'doc-output.{help_command.event_class}', help_command=help_command
+    )
+
+    session.emit(
+        f'doc-relateditems-start.{help_command.event_class}',
+        help_command=help_command,
+    )
+
     if help_command.related_items:
         for related_item in sorted(help_command.related_items):
-            session.emit('doc-relateditem.%s.%s'
-                         % (help_command.event_class, related_item),
-                         help_command=help_command,
-                         related_item=related_item)
-    session.emit('doc-relateditems-end.%s' % help_command.event_class,
-                 help_command=help_command)
+            session.emit(
+                f'doc-relateditem.{help_command.event_class}.{related_item}',
+                help_command=help_command,
+                related_item=related_item,
+            )
+
+    session.emit(
+        f'doc-relateditems-end.{help_command.event_class}',
+        help_command=help_command,
+    )

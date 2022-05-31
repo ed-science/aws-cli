@@ -221,7 +221,7 @@ class DetailedFormatter(Formatter):
         formatted_title = title
         api_num = self._get_api_num(event_record)
         if api_num is not None:
-            formatted_title = ('[%s] ' % api_num) + formatted_title
+            formatted_title = f'[{api_num}] ' + formatted_title
         formatted_title = self._color_if_configured(formatted_title, 'title')
         formatted_title += '\n'
 
@@ -232,8 +232,7 @@ class DetailedFormatter(Formatter):
         return '\n' + formatted_title + formatted_timestamp
 
     def _get_api_num(self, event_record):
-        request_id = event_record['request_id']
-        if request_id:
+        if request_id := event_record['request_id']:
             if request_id not in self._request_id_to_api_num:
                 self._request_id_to_api_num[
                     request_id] = self._num_api_calls
@@ -241,8 +240,7 @@ class DetailedFormatter(Formatter):
             return self._request_id_to_api_num[request_id]
 
     def _format_description(self, value_description):
-        return self._color_if_configured(
-            value_description + ': ', 'description')
+        return self._color_if_configured(f'{value_description}: ', 'description')
 
     def _format_value(self, value, event_record, value_format=None):
         if value_format:
@@ -261,7 +259,7 @@ class DetailedFormatter(Formatter):
 
 class SectionValuePrettyFormatter(object):
     def pformat(self, value, value_format, event_record):
-        return getattr(self, '_pformat_' + value_format)(value, event_record)
+        return getattr(self, f'_pformat_{value_format}')(value, event_record)
 
     def _pformat_timestamp(self, event_timestamp, event_record=None):
         return datetime.datetime.fromtimestamp(

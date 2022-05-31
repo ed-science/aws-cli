@@ -198,11 +198,10 @@ class DocumentStructure(ReSTDocument):
         """
         # We are at the root flush the links at the beginning of the
         # document
-        if len(self.path) == 1:
-            if self.hrefs:
-                self.style.new_paragraph()
-                for refname, link in self.hrefs.items():
-                    self.style.link_target_definition(refname, link)
+        if len(self.path) == 1 and self.hrefs:
+            self.style.new_paragraph()
+            for refname, link in self.hrefs.items():
+                self.style.link_target_definition(refname, link)
         value = self.getvalue()
         for name, section in self._structure.items():
             value += section.flush_structure()

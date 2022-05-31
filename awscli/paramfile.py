@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # special param file processing.  This is typically because it
 # refers to an actual URI of some sort and we don't want to actually
 # download the content (i.e TemplateURL in cloudformation).
-PARAMFILE_DISABLED = set([
+PARAMFILE_DISABLED = {
     'api-gateway.put-integration.uri',
     'api-gateway.create-integration.integration-uri',
     'api-gateway.update-integration.integration-uri',
@@ -47,23 +47,16 @@ PARAMFILE_DISABLED = set([
     'cloudformation.validate-template.template-url',
     'cloudformation.estimate-template-cost.template-url',
     'cloudformation.get-template-summary.template-url',
-
     'cloudformation.create-stack.stack-policy-url',
     'cloudformation.update-stack.stack-policy-url',
     'cloudformation.set-stack-policy.stack-policy-url',
-    # aws cloudformation package --template-file
     'custom.package.template-file',
-    # aws cloudformation deploy --template-file
     'custom.deploy.template-file',
-
     'cloudformation.update-stack.stack-policy-during-update-url',
     'cloudformation.register-type.schema-handler-package',
-    # We will want to change the event name to ``s3`` as opposed to
-    # custom in the near future along with ``s3`` to ``s3api``.
     'custom.cp.website-redirect',
     'custom.mv.website-redirect',
     'custom.sync.website-redirect',
-
     'guardduty.create-ip-set.location',
     'guardduty.update-ip-set.location',
     'guardduty.create-threat-intel-set.location',
@@ -76,27 +69,20 @@ PARAMFILE_DISABLED = set([
     'comprehend.batch-detect-key-phrases.text-list',
     'comprehend.detect-sentiment.text',
     'comprehend.batch-detect-sentiment.text-list',
-
     'emr.create-studio.idp-auth-url',
-
     'iam.create-open-id-connect-provider.url',
-
     'machine-learning.predict.predict-endpoint',
-
     'mediatailor.put-playback-configuration.ad-decision-server-url',
     'mediatailor.put-playback-configuration.slate-ad-url',
     'mediatailor.put-playback-configuration.video-content-source-url',
-
     'rds.copy-db-cluster-snapshot.pre-signed-url',
     'rds.create-db-cluster.pre-signed-url',
     'rds.copy-db-snapshot.pre-signed-url',
     'rds.create-db-instance-read-replica.pre-signed-url',
-
     'sagemaker.create-notebook-instance.default-code-repository',
     'sagemaker.create-notebook-instance.additional-code-repositories',
     'sagemaker.update-notebook-instance.default-code-repository',
     'sagemaker.update-notebook-instance.additional-code-repositories',
-
     'serverlessapplicationrepository.create-application.home-page-url',
     'serverlessapplicationrepository.create-application.license-url',
     'serverlessapplicationrepository.create-application.readme-url',
@@ -106,12 +92,9 @@ PARAMFILE_DISABLED = set([
     'serverlessapplicationrepository.create-application-version.template-url',
     'serverlessapplicationrepository.update-application.home-page-url',
     'serverlessapplicationrepository.update-application.readme-url',
-
     'service-catalog.create-product.support-url',
     'service-catalog.update-product.support-url',
-
     'ses.put-account-details.website-url',
-
     'sqs.add-permission.queue-url',
     'sqs.change-message-visibility.queue-url',
     'sqs.change-message-visibility-batch.queue-url',
@@ -129,19 +112,15 @@ PARAMFILE_DISABLED = set([
     'sqs.list-queue-tags.queue-url',
     'sqs.tag-queue.queue-url',
     'sqs.untag-queue.queue-url',
-
     's3.copy-object.website-redirect-location',
     's3.create-multipart-upload.website-redirect-location',
     's3.put-object.website-redirect-location',
-
-    # Double check that this has been renamed!
     'sns.subscribe.notification-endpoint',
-
     'iot.create-job.document-source',
     'translate.translate-text.text',
+    'workdocs.create-notification-subscription.notification-endpoint',
+}
 
-    'workdocs.create-notification-subscription.notification-endpoint'
-])
 
 
 class ResourceLoadingError(Exception):
@@ -239,8 +218,7 @@ def get_file(prefix, path, mode):
             'not be decoded.  If this is a binary file, please use the '
             'fileb:// prefix instead of the file:// prefix.' % file_path)
     except (OSError, IOError) as e:
-        raise ResourceLoadingError('Unable to load paramfile %s: %s' % (
-            path, e))
+        raise ResourceLoadingError(f'Unable to load paramfile {path}: {e}')
 
 
 def get_uri(prefix, uri):
@@ -250,11 +228,9 @@ def get_uri(prefix, uri):
         if r.status_code == 200:
             return r.text
         else:
-            raise ResourceLoadingError(
-                "received non 200 status code of %s" % (
-                    r.status_code))
+            raise ResourceLoadingError(f"received non 200 status code of {r.status_code}")
     except Exception as e:
-        raise ResourceLoadingError('Unable to retrieve %s: %s' % (uri, e))
+        raise ResourceLoadingError(f'Unable to retrieve {uri}: {e}')
 
 
 LOCAL_PREFIX_MAP = {

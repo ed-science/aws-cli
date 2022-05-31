@@ -18,7 +18,7 @@ class TestRemoveTags(BaseAWSCommandParamsTest):
     prefix = 'elb remove-tags'
 
     def test_shorthand(self):
-        command = self.prefix + ' --load-balancer-names foo'
+        command = f'{self.prefix} --load-balancer-names foo'
         command += ' --tags bar baz'
         expected_params = {
             'LoadBalancerNames': ['foo'],

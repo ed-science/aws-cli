@@ -29,4 +29,4 @@ def get_trail_by_arn(cloudtrail_client, trail_arn):
     for trail in trails:
         if trail.get('TrailARN', None) == trail_arn:
             return trail
-    raise ValueError('A trail could not be found for %s' % trail_arn)
+    raise ValueError(f'A trail could not be found for {trail_arn}')

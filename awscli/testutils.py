@@ -138,7 +138,7 @@ def temporary_file(mode):
 
     """
     temporary_directory = tempfile.mkdtemp()
-    basename = 'tmpfile-%s' % str(random_chars(8))
+    basename = f'tmpfile-{str(random_chars(8))}'
     full_filename = os.path.join(temporary_directory, basename)
     open(full_filename, 'w').close()
     try:
@@ -156,22 +156,14 @@ def create_bucket(session, name=None, region=None):
     if not region:
         region = 'us-west-2'
     client = session.create_client('s3', region_name=region)
-    if name:
-        bucket_name = name
-    else:
-        bucket_name = random_bucket_name()
+    bucket_name = name or random_bucket_name()
     params = {'Bucket': bucket_name}
     if region != 'us-east-1':
         params['CreateBucketConfiguration'] = {'LocationConstraint': region}
     try:
         client.create_bucket(**params)
     except ClientError as e:
-        if e.response['Error'].get('Code') == 'BucketAlreadyOwnedByYou':
-            # This can happen in the retried request, when the first one
-            # succeeded on S3 but somehow the response never comes back.
-            # We still got a bucket ready for test anyway.
-            pass
-        else:
+        if e.response['Error'].get('Code') != 'BucketAlreadyOwnedByYou':
             raise
     return bucket_name
 
@@ -378,10 +370,8 @@ class BaseAWSCommandParamsTest(unittest.TestCase):
             last_kwargs = copy.copy(self.last_kwargs)
             if ignore_params is not None:
                 for key in ignore_params:
-                    try:
+                    with contextlib.suppress(KeyError):
                         del last_kwargs[key]
-                    except KeyError:
-                        pass
             if params != last_kwargs:
                 self.fail("Actual params did not match expected params.\n"
                           "Expected:\n\n"
@@ -401,11 +391,7 @@ class BaseAWSCommandParamsTest(unittest.TestCase):
         event_emitter.register('before-call', self.before_call)
         event_emitter.register_first(
             'before-parameter-build.*.*', self.before_parameter_build)
-        if not isinstance(cmd, list):
-            cmdlist = cmd.split()
-        else:
-            cmdlist = cmd
-
+        cmdlist = cmd if isinstance(cmd, list) else cmd.split()
         with capture_output() as captured:
             try:
                 rc = self.driver.main(cmdlist)
@@ -470,10 +456,7 @@ class BaseCLIWireResponseTest(unittest.TestCase):
         self.send_is_patched = True
 
     def run_cmd(self, cmd, expected_rc=0):
-        if not isinstance(cmd, list):
-            cmdlist = cmd.split()
-        else:
-            cmdlist = cmd
+        cmdlist = cmd if isinstance(cmd, list) else cmd.split()
         with capture_output() as captured:
             try:
                 rc = self.driver.main(cmdlist)
@@ -618,8 +601,8 @@ def aws(command, collect_memory=False, env_vars=None,
     if 'AWS_TEST_COMMAND' in os.environ:
         aws_command = os.environ['AWS_TEST_COMMAND']
     else:
-        aws_command = 'python %s' % get_aws_cmd()
-    full_command = '%s %s' % (aws_command, command)
+        aws_command = f'python {get_aws_cmd()}'
+    full_command = f'{aws_command} {command}'
     stdout_encoding = get_stdout_encoding()
     if isinstance(full_command, six.text_type) and not six.PY3:
         full_command = full_command.encode(stdout_encoding)
@@ -637,9 +620,7 @@ def aws(command, collect_memory=False, env_vars=None,
         return process
     memory = None
     if not collect_memory:
-        kwargs = {}
-        if input_data:
-            kwargs = {'input': input_data}
+        kwargs = {'input': input_data} if input_data else {}
         stdout, stderr = process.communicate(**kwargs)
     else:
         stdout, stderr, memory = _wait_and_collect_mem(process)
@@ -686,7 +667,7 @@ def _get_memory_with_ps(pid):
     command_list.append(str(pid))
     p = Popen(command_list, stdout=PIPE)
     stdout = p.communicate()[0]
-    if not p.returncode == 0:
+    if p.returncode != 0:
         raise ProcessTerminatedError(str(pid))
     else:
         # Get the RSS from output that looks like this:
@@ -735,8 +716,7 @@ class BaseS3CLICommand(unittest.TestCase):
 
     def create_client_for_bucket(self, bucket_name):
         region = self.regions.get(bucket_name, self.region)
-        client = self.session.create_client('s3', region_name=region)
-        return client
+        return self.session.create_client('s3', region_name=region)
 
     def assert_key_contents_equal(self, bucket, key, expected_contents):
         self.wait_until_key_exists(bucket, key)
@@ -768,15 +748,17 @@ class BaseS3CLICommand(unittest.TestCase):
             'Key': key_name, 'Body': contents
         }
         if extra_args is not None:
-            call_args.update(extra_args)
+            call_args |= extra_args
         response = client.put_object(**call_args)
         self.addCleanup(self.delete_key, bucket_name, key_name)
         extra_head_params = {}
         if extra_args:
-            extra_head_params = dict(
-                (k, v) for (k, v) in extra_args.items()
+            extra_head_params = {
+                k: v
+                for (k, v) in extra_args.items()
                 if k in self._PUT_HEAD_SHARED_EXTRAS
-            )
+            }
+
         self.wait_until_key_exists(
             bucket_name,
             key_name,
@@ -872,8 +854,7 @@ class BaseS3CLICommand(unittest.TestCase):
 
     def head_object(self, bucket_name, key_name):
         client = self.create_client_for_bucket(bucket_name)
-        response = client.head_object(Bucket=bucket_name, Key=key_name)
-        return response
+        return client.head_object(Bucket=bucket_name, Key=key_name)
 
     def wait_until_key_exists(self, bucket_name, key_name, extra_params=None,
                               min_successes=3):
@@ -894,14 +875,15 @@ class BaseS3CLICommand(unittest.TestCase):
             waiter = client.get_waiter('object_not_exists')
         params = {'Bucket': bucket_name, 'Key': key_name}
         if extra_params is not None:
-            params.update(extra_params)
+            params |= extra_params
         for _ in range(min_successes):
             waiter.wait(**params)
 
     def assert_no_errors(self, p):
         self.assertEqual(
-            p.rc, 0,
-            "Non zero rc (%s) received: %s" % (p.rc, p.stdout + p.stderr))
+            p.rc, 0, f"Non zero rc ({p.rc}) received: {p.stdout + p.stderr}"
+        )
+
         self.assertNotIn("Error:", p.stderr)
         self.assertNotIn("failed:", p.stderr)
         self.assertNotIn("client error", p.stderr)

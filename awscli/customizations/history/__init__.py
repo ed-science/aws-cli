@@ -74,11 +74,10 @@ def _should_enable_cli_history(session, parsed_args):
         return False
     has_history_enabled = scoped_config.get('cli_history') == 'enabled'
     if has_history_enabled and sqlite3 is None:
-        if has_history_enabled:
-            sys.stderr.write(
-                'cli_history is enabled but sqlite3 is unavailable. '
-                'Unable to collect CLI history.\n'
-            )
+        sys.stderr.write(
+            'cli_history is enabled but sqlite3 is unavailable. '
+            'Unable to collect CLI history.\n'
+        )
         return False
     return has_history_enabled
 

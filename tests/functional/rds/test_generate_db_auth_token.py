@@ -47,7 +47,7 @@ class TestGenerateDBAuthToken(BaseAWSCommandParamsTest):
         self.assertEqual(parse_qs(parts1.query), parse_qs(parts2.query))
 
     def test_generate_simple_token(self):
-        command = self.prefix + ' --hostname host.us-east-1.amazonaws.com'
+        command = f'{self.prefix} --hostname host.us-east-1.amazonaws.com'
         command += ' --port 3306 --username mySQLUser'
         clock = datetime.datetime(2016, 11, 7, 17, 39, 33, tzinfo=tzutc())
 
@@ -64,5 +64,4 @@ class TestGenerateDBAuthToken(BaseAWSCommandParamsTest):
             '36c6c9a0c5e0e362'
         )
 
-        self.assert_url_equal(
-            'https://' + stdout.strip('\n'), 'https://' + expected)
+        self.assert_url_equal('https://' + stdout.strip('\n'), f'https://{expected}')

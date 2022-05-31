@@ -35,19 +35,13 @@ class BaseS3TransferCommandTest(BaseAWSCommandParamsTest):
             'ContentLength': 100,
             'LastModified': '00:00:00Z'
         }
-        response.update(override_kwargs)
+        response |= override_kwargs
         return response
 
     def list_objects_response(self, keys):
-        contents = []
-        for key in keys:
-            contents.append(
-                {
-                    'Key': key,
-                    'LastModified': '00:00:00Z',
-                    'Size': 100
-                }
-            )
+        contents = [
+            {'Key': key, 'LastModified': '00:00:00Z', 'Size': 100} for key in keys
+        ]
 
         return {
             'Contents': contents,
@@ -89,7 +83,7 @@ class BaseS3TransferCommandTest(BaseAWSCommandParamsTest):
             'Bucket': bucket,
             'Key': key,
         }
-        params.update(override_kwargs)
+        params |= override_kwargs
         return 'HeadObject', params
 
     def list_objects_request(self, bucket, prefix=None, **override_kwargs):
@@ -98,7 +92,7 @@ class BaseS3TransferCommandTest(BaseAWSCommandParamsTest):
         }
         if prefix is None:
             params['Prefix'] = ''
-        params.update(override_kwargs)
+        params |= override_kwargs
         return 'ListObjectsV2', params
 
     def put_object_request(self, bucket, key, **override_kwargs):
@@ -107,7 +101,7 @@ class BaseS3TransferCommandTest(BaseAWSCommandParamsTest):
             'Key': key,
             'Body': mock.ANY,
         }
-        params.update(override_kwargs)
+        params |= override_kwargs
         return 'PutObject', params
 
     def get_object_request(self, bucket, key, **override_kwargs):
@@ -115,7 +109,7 @@ class BaseS3TransferCommandTest(BaseAWSCommandParamsTest):
             'Bucket': bucket,
             'Key': key,
         }
-        params.update(override_kwargs)
+        params |= override_kwargs
         return 'GetObject', params
 
     def copy_object_request(self, source_bucket, source_key, bucket, key,
@@ -128,7 +122,7 @@ class BaseS3TransferCommandTest(BaseAWSCommandParamsTest):
                 'Key': source_key
             }
         }
-        params.update(override_kwargs)
+        params |= override_kwargs
         return 'CopyObject', params
 
     def delete_object_request(self, bucket, key, **override_kwargs):
@@ -136,7 +130,7 @@ class BaseS3TransferCommandTest(BaseAWSCommandParamsTest):
             'Bucket': bucket,
             'Key': key,
         }
-        params.update(override_kwargs)
+        params |= override_kwargs
         return 'DeleteObject', params
 
     def create_mpu_request(self, bucket, key, **override_kwargs):
@@ -144,7 +138,7 @@ class BaseS3TransferCommandTest(BaseAWSCommandParamsTest):
             'Bucket': bucket,
             'Key': key,
         }
-        params.update(override_kwargs)
+        params |= override_kwargs
         return 'CreateMultipartUpload', params
 
     def upload_part_copy_request(self, source_bucket, source_key, bucket, key,
@@ -159,23 +153,18 @@ class BaseS3TransferCommandTest(BaseAWSCommandParamsTest):
             'UploadId': upload_id,
 
         }
-        params.update(override_kwargs)
+        params |= override_kwargs
         return 'UploadPartCopy', params
 
     def complete_mpu_request(self, bucket, key, upload_id, num_parts,
                              **override_kwargs):
-        parts = []
-        for i in range(num_parts):
-            parts.append(
-                {
-                    'ETag': '"etag"', 'PartNumber': i + 1
-                }
-            )
+        parts = [{'ETag': '"etag"', 'PartNumber': i + 1} for i in range(num_parts)]
+
         params = {
             'Bucket': bucket,
             'Key': key,
             'UploadId': upload_id,
             'MultipartUpload': {'Parts': parts}
         }
-        params.update(override_kwargs)
+        params |= override_kwargs
         return 'CompleteMultipartUpload', params

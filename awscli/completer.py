@@ -20,10 +20,7 @@ LOG = logging.getLogger(__name__)
 class Completer(object):
 
     def __init__(self, driver=None):
-        if driver is not None:
-            self.driver = driver
-        else:
-            self.driver = awscli.clidriver.create_clidriver()
+        self.driver = awscli.clidriver.create_clidriver() if driver is None else driver
         self.main_help = self.driver.create_help_command()
         self.main_options = self._get_documented_completions(
             self.main_help.arg_table)
@@ -32,7 +29,7 @@ class Completer(object):
         if point is None:
             point = len(cmdline)
 
-        args = cmdline[0:point].split()
+        args = cmdline[:point].split()
         current_arg = args[-1]
         cmd_args = [w for w in args if not w.startswith('-')]
         opts = [w for w in args if w.startswith('-')]
@@ -123,7 +120,7 @@ class Completer(object):
                 if stripped_opt in all_options:
                     all_options.remove(stripped_opt)
         cw = current_arg.lstrip('-')
-        possibilities = ['--' + n for n in all_options if n.startswith(cw)]
+        possibilities = [f'--{n}' for n in all_options if n.startswith(cw)]
         if len(possibilities) == 1 and possibilities[0] == current_arg:
             return self._complete_option(possibilities[0])
         return possibilities
@@ -141,6 +138,6 @@ if __name__ == '__main__':
     elif len(sys.argv) == 2:
         cmdline = sys.argv[1]
     else:
-        print('usage: %s <cmdline> <point>' % sys.argv[0])
+        print(f'usage: {sys.argv[0]} <cmdline> <point>')
         sys.exit(1)
     print(complete(cmdline, point))

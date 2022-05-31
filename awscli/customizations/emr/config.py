@@ -87,11 +87,12 @@ class StringConfiguration(Configuration):
         return command.supports_arg(self.arg_name.replace('_', '-'))
 
     def is_present(self, parsed_args):
-        if (not self.arg_value_key):
-            return self._check_arg(parsed_args, self.arg_name)
-        else:
-            return self._check_arg(parsed_args, self.arg_name) \
-                and self.arg_value_key in getattr(parsed_args, self.arg_name)
+        return (
+            self._check_arg(parsed_args, self.arg_name)
+            and self.arg_value_key in getattr(parsed_args, self.arg_name)
+            if self.arg_value_key
+            else self._check_arg(parsed_args, self.arg_name)
+        )
 
     def add(self, command, parsed_args, value):
         if (not self.arg_value_key):
@@ -106,7 +107,7 @@ class BooleanConfiguration(Configuration):
 
     def __init__(self, name):
         super(BooleanConfiguration, self).__init__(name, name)
-        self.no_version_arg_name = "no_" + name
+        self.no_version_arg_name = f"no_{name}"
 
     def is_applicable(self, command):
         return command.supports_arg(self.arg_name.replace('_', '-')) and \

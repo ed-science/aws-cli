@@ -4,8 +4,7 @@ from benchmark_utils import backup, copy, clean, get_default_argparser
 
 
 def benchmark_rm(args):
-    command = get_transfer_command(
-        'rm %s' % args.target, args.recursive, args.quiet)
+    command = get_transfer_command(f'rm {args.target}', args.recursive, args.quiet)
     backup_path = backup(args.target, args.recursive)
 
     benchmark_command(
